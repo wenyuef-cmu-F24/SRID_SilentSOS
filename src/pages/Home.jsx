@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-const API_BASE = 'http://localhost:4000/api'
+const API_BASE = '/api'
 
 const THREE_TAP_KEY = 'home_threeTapMode'
 const SAFE_WORD_KEY = 'home_safeWordMode'

@@ -6,9 +6,10 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Simple CORS middleware (no external dependency)
+// Simple CORS middleware (no external dependency). For this single-app deployment,
+// the frontend is served from the same origin, so CORS is only needed for local dev.
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
@@ -371,8 +372,19 @@ app.get('/api/history', authMiddleware, (req, res) => {
   res.json(events);
 });
 
-app.listen(PORT, () => {
-  console.log(`API server listening on http://localhost:${PORT}`);
+// Serve built frontend (Vite build output in /dist)
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
+
+// SPA fallback: let React Router handle non-API routes
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
+app.listen(PORT, () => {
+  console.log(`SilentSOS app (API + frontend) listening on http://localhost:${PORT}`);
+});
 

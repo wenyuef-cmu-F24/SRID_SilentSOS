@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const API_BASE = 'http://localhost:4000/api'
+const API_BASE = '/api'
 
 function ProfileEdit() {
   const navigate = useNavigate()
