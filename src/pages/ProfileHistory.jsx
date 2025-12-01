@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function ProfileHistory() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [history, setHistory] = useState([])
 
   useEffect(() => {
-    // Load alert history from localStorage
-    const savedHistory = JSON.parse(localStorage.getItem('alertHistory') || '[]')
-    setHistory(savedHistory)
-  }, [])
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setHistory(data)
+      } catch {
+        // ignore
+      }
+    }
+    if (token) {
+      loadHistory()
+    }
+  }, [token])
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp)
@@ -66,7 +82,9 @@ function ProfileHistory() {
                   <h3 className="font-bold text-gray-900 mb-1">
                     {alert.type === '3-tap' ? '3-Tap Alert' : 'Safe Word Alert'}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-1">{alert.location}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    {alert.locationText || `Lat ${alert.lat?.toFixed?.(4)}, Lng ${alert.lng?.toFixed?.(4)}`}
+                  </p>
                   <p className="text-xs text-gray-400">{formatDate(alert.timestamp)}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
@@ -74,7 +92,7 @@ function ProfileHistory() {
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-orange-100 text-orange-700'
                 }`}>
-                  {alert.status}
+                  {alert.status || 'sent'}
                 </span>
               </div>
             </div>

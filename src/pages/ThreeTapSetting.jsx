@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function ThreeTapSetting() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [settings, setSettings] = useState({
     notifyEmergencyContact: true,
     notifyNearby: true,
@@ -10,13 +14,25 @@ function ThreeTapSetting() {
   })
 
   useEffect(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('threeTapSettings') || '{}')
-    setSettings({
-      notifyEmergencyContact: savedSettings.notifyEmergencyContact ?? true,
-      notifyNearby: savedSettings.notifyNearby ?? true,
-      callPolice: savedSettings.callPolice ?? true,
-    })
-  }, [])
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const threeTap = data.threeTap || {}
+        setSettings({
+          notifyEmergencyContact: threeTap.notifyEmergencyContact ?? true,
+          notifyNearby: threeTap.notifyNearby ?? true,
+          callPolice: threeTap.callPolice ?? true,
+        })
+      } catch {
+        // ignore
+      }
+    }
+    if (token) load()
+  }, [token])
 
   const handleToggle = (field) => {
     const newSettings = {
@@ -24,7 +40,21 @@ function ThreeTapSetting() {
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    localStorage.setItem('threeTapSettings', JSON.stringify(newSettings))
+    const save = async () => {
+      try {
+        await fetch(`${API_BASE}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ threeTap: newSettings }),
+        })
+      } catch {
+        // ignore
+      }
+    }
+    save()
   }
 
   const options = [

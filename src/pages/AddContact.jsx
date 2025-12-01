@@ -1,8 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function AddContact() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     relationship: '',
@@ -29,24 +33,27 @@ function AddContact() {
       return
     }
 
-    // Get existing contacts from localStorage
-    const existingContacts = JSON.parse(localStorage.getItem('emergencyContacts') || '[]')
-    
-    // Add new contact
-    const newContact = {
-      id: Date.now(),
-      name: formData.name,
-      relationship: formData.relationship,
-      phone: formData.phone,
-      email: formData.email,
-      shareLocation: formData.shareLocation
+    const save = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/contacts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        })
+        if (!res.ok) {
+          alert('Failed to save contact')
+          return
+        }
+        navigate('/emergency-contact')
+      } catch {
+        alert('Failed to save contact')
+      }
     }
-    
-    existingContacts.push(newContact)
-    localStorage.setItem('emergencyContacts', JSON.stringify(existingContacts))
-    
-    // Navigate back to emergency contact page
-    navigate('/emergency-contact')
+
+    save()
   }
 
   return (

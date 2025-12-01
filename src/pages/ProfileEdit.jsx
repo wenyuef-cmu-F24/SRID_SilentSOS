@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function ProfileEdit() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [profile, setProfile] = useState({
     name: '',
     phone: '',
@@ -10,13 +14,26 @@ function ProfileEdit() {
   })
 
   useEffect(() => {
-    const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    setProfile({
-      name: savedProfile.name || '',
-      phone: savedProfile.phone || '',
-      email: savedProfile.email || '',
-    })
-  }, [])
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setProfile({
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+        })
+      } catch {
+        // ignore
+      }
+    }
+    if (token) {
+      fetchProfile()
+    }
+  }, [token])
 
   const handleInputChange = (field, value) => {
     setProfile(prev => ({
@@ -35,9 +52,28 @@ function ProfileEdit() {
       return
     }
     
-    localStorage.setItem('userProfile', JSON.stringify(profile))
-    alert('Profile saved successfully!')
-    navigate('/setting/profile')
+    const save = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(profile),
+        })
+        if (!res.ok) {
+          alert('Failed to save profile')
+          return
+        }
+        alert('Profile saved successfully!')
+        navigate('/setting/profile')
+      } catch {
+        alert('Failed to save profile')
+      }
+    }
+
+    save()
   }
 
   return (

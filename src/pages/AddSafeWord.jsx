@@ -1,8 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function AddSafeWord() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [formData, setFormData] = useState({
     word: '',
     notifyEmergencyContact: false,
@@ -23,23 +27,32 @@ function AddSafeWord() {
       return
     }
 
-    // Get existing safe words
-    const existingSafeWords = JSON.parse(localStorage.getItem('safeWords') || '[]')
-    
-    // Create new safe word
-    const newSafeWord = {
-      id: Date.now(),
-      word: formData.word.trim(),
-      notifyEmergencyContact: formData.notifyEmergencyContact,
-      notifyNearby: formData.notifyNearby,
-      callPolice: formData.callPolice,
-      activate: true, // Default to activated
+    const save = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/safe-words`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            word: formData.word.trim(),
+            notifyEmergencyContact: formData.notifyEmergencyContact,
+            notifyNearby: formData.notifyNearby,
+            callPolice: formData.callPolice,
+          }),
+        })
+        if (!res.ok) {
+          alert('Failed to save safe word')
+          return
+        }
+        navigate('/setting/safe-word')
+      } catch {
+        alert('Failed to save safe word')
+      }
     }
-    
-    existingSafeWords.push(newSafeWord)
-    localStorage.setItem('safeWords', JSON.stringify(existingSafeWords))
-    
-    navigate('/setting/safe-word')
+
+    save()
   }
 
   return (

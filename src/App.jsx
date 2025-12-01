@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import EmergencyContact from './pages/EmergencyContact'
@@ -14,28 +14,117 @@ import ThreeTapSetting from './pages/ThreeTapSetting'
 import SafeWordSetting from './pages/SafeWordSetting'
 import AddSafeWord from './pages/AddSafeWord'
 import NotificationsSetting from './pages/NotificationsSetting'
+import AuthPage from './pages/Auth'
+import { AuthProvider, useAuth } from './context/AuthContext'
+
+function PrivateRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) return null
+  if (!isAuthenticated) return <Navigate to="/auth" replace />
+  return children
+}
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="emergency-contact" element={<EmergencyContact />} />
-          <Route path="setting" element={<Setting />} />
-        </Route>
-        <Route path="/add-contact" element={<AddContact />} />
-        <Route path="/setting/profile" element={<ProfileSetting />} />
-        <Route path="/setting/profile/edit" element={<ProfileEdit />} />
-        <Route path="/setting/profile/security" element={<ProfileSecurity />} />
-        <Route path="/setting/profile/history" element={<ProfileHistory />} />
-        <Route path="/setting/profile/share" element={<ProfileShare />} />
-        <Route path="/setting/3-tap" element={<ThreeTapSetting />} />
-        <Route path="/setting/safe-word" element={<SafeWordSetting />} />
-        <Route path="/setting/safe-word/add" element={<AddSafeWord />} />
-        <Route path="/setting/notifications" element={<NotificationsSetting />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route
+            path="/"
+            element={(
+              <PrivateRoute>
+                <Layout />
+              </PrivateRoute>
+            )}
+          >
+            <Route index element={<Home />} />
+            <Route path="emergency-contact" element={<EmergencyContact />} />
+            <Route path="setting" element={<Setting />} />
+          </Route>
+          <Route
+            path="/add-contact"
+            element={(
+              <PrivateRoute>
+                <AddContact />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/profile"
+            element={(
+              <PrivateRoute>
+                <ProfileSetting />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/profile/edit"
+            element={(
+              <PrivateRoute>
+                <ProfileEdit />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/profile/security"
+            element={(
+              <PrivateRoute>
+                <ProfileSecurity />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/profile/history"
+            element={(
+              <PrivateRoute>
+                <ProfileHistory />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/profile/share"
+            element={(
+              <PrivateRoute>
+                <ProfileShare />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/3-tap"
+            element={(
+              <PrivateRoute>
+                <ThreeTapSetting />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/safe-word"
+            element={(
+              <PrivateRoute>
+                <SafeWordSetting />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/safe-word/add"
+            element={(
+              <PrivateRoute>
+                <AddSafeWord />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/setting/notifications"
+            element={(
+              <PrivateRoute>
+                <NotificationsSetting />
+              </PrivateRoute>
+            )}
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }
 

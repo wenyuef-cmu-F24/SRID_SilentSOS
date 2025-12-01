@@ -1,11 +1,65 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
+
+const THREE_TAP_KEY = 'home_threeTapMode'
+const SAFE_WORD_KEY = 'home_safeWordMode'
 
 function Home() {
+  const { token } = useAuth()
   const [tapCount, setTapCount] = useState(0)
   const [isListening, setIsListening] = useState(false)
   const [threeTapMode, setThreeTapMode] = useState(false)
   const [safeWordMode, setSafeWordMode] = useState(false)
-  const [currentLocation] = useState('600NWhisman, California')
+  const [currentLocation, setCurrentLocation] = useState('Detecting location…')
+  const [coords, setCoords] = useState(null)
+  const [nearbyAlert, setNearbyAlert] = useState(null)
+  const [sosStatus, setSosStatus] = useState(null) // { type: 'success' | 'error', message: string }
+  const [showSosModal, setShowSosModal] = useState(false)
+  const [showNearbyModal, setShowNearbyModal] = useState(false)
+
+  // Restore 3-tap and safe word toggles when returning to Home
+  useEffect(() => {
+    const savedThreeTap = localStorage.getItem(THREE_TAP_KEY)
+    const savedSafeWord = localStorage.getItem(SAFE_WORD_KEY)
+    if (savedThreeTap !== null) {
+      setThreeTapMode(savedThreeTap === 'true')
+    }
+    if (savedSafeWord !== null) {
+      setSafeWordMode(savedSafeWord === 'true')
+    }
+  }, [])
+
+  // Get current location once and send to backend
+  useEffect(() => {
+    if (!token) return
+
+    if (!navigator.geolocation) {
+      setCurrentLocation('Location not available')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        setCoords({ lat: latitude, lng: longitude })
+        setCurrentLocation(`Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`)
+
+        fetch(`${API_BASE}/location`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ lat: latitude, lng: longitude }),
+        }).catch(() => {})
+      },
+      () => {
+        setCurrentLocation('Location permission denied')
+      }
+    )
+  }, [token])
 
   useEffect(() => {
     if (tapCount === 3 && threeTapMode) {
@@ -24,14 +78,55 @@ function Home() {
     if (threeTapMode) {
       setTapCount(prev => prev + 1)
     } else {
-      triggerSOS()
+      triggerSOS('3-tap')
     }
   }
 
-  const triggerSOS = () => {
-    alert(`🚨 SOS Alert Triggered!\n\nLocation: ${currentLocation}\n\nEmergency services have been notified.`)
-    setTapCount(0)
+  const triggerSOS = async (type) => {
+    if (!coords) {
+      setSosStatus({
+        type: 'error',
+        message: 'Location not available yet. Please enable location services.',
+      })
+      return
+    }
+
+    try {
+      await fetch(`${API_BASE}/sos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          lat: coords.lat,
+          lng: coords.lng,
+          type,
+          locationText: currentLocation,
+        }),
+      })
+      setSosStatus({
+        type: 'success',
+        message: 'SOS sent with your current location. Help will be notified based on your settings.',
+      })
+      setShowSosModal(true)
+    } catch {
+      setSosStatus({
+        type: 'error',
+        message: 'Failed to send SOS. Please try again.',
+      })
+      setShowSosModal(true)
+    } finally {
+      setTapCount(0)
+    }
   }
+
+  // Auto-hide SOS status after a few seconds
+  useEffect(() => {
+    if (!sosStatus) return
+    const t = setTimeout(() => setSosStatus(null), 5000)
+    return () => clearTimeout(t)
+  }, [sosStatus])
 
   const toggleListening = () => {
     if (!safeWordMode) {
@@ -45,14 +140,57 @@ function Home() {
         const randomWords = ['help me', 'emergency', 'assistance']
         const heardWord = randomWords[Math.floor(Math.random() * randomWords.length)]
         console.log(`Listening for safe word... (heard: "${heardWord}")`)
+        // Demo: trigger SOS when we "hear" something
+        triggerSOS('safe-word')
       }, 1000)
     }
   }
 
+  const toggleThreeTap = () => {
+    setThreeTapMode(prev => {
+      const next = !prev
+      localStorage.setItem(THREE_TAP_KEY, String(next))
+      return next
+    })
+  }
+
+  const toggleSafeWord = () => {
+    setSafeWordMode(prev => {
+      const next = !prev
+      localStorage.setItem(SAFE_WORD_KEY, String(next))
+      return next
+    })
+  }
+
+  // Poll backend for nearby alerts
+  useEffect(() => {
+    if (!token) return
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/alerts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          // Show the most recent alert
+          const latest = data[data.length - 1]
+          setNearbyAlert(latest)
+          setShowNearbyModal(true)
+        }
+      } catch {
+        // ignore
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [token])
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-4 pb-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-4 pb-24 flex flex-col justify-start">
       {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
+      <div className="flex justify-between items-center mb-4 text-sm">
         <span className="font-semibold">9:41</span>
         <div className="flex gap-1">
           <div className="w-4 h-4">📶</div>
@@ -60,6 +198,41 @@ function Home() {
           <div className="w-4 h-4">🔋</div>
         </div>
       </div>
+
+      {/* Top alerts: SOS status + Nearby alert banner */}
+      {sosStatus && (
+        <div
+          className={`mb-3 rounded-2xl px-4 py-3 text-sm flex items-start gap-2 ${
+            sosStatus.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          <span className="text-lg">{sosStatus.type === 'success' ? '✅' : '⚠️'}</span>
+          <div className="flex-1">{sosStatus.message}</div>
+          <button
+            onClick={() => setSosStatus(null)}
+            className="text-xs font-semibold opacity-80 hover:opacity-100"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      {nearbyAlert && (
+        <div className="mb-3 bg-red-50 border border-red-200 rounded-2xl p-3 text-sm text-red-800 flex justify-between items-center">
+          <div>
+            <div className="font-semibold">Nearby SOS alert</div>
+            <div>Someone within 1 mile triggered SOS.</div>
+          </div>
+          <button
+            onClick={() => setNearbyAlert(null)}
+            className="text-xs font-semibold text-red-600"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Location Card */}
       <div className="bg-white rounded-2xl shadow-sm p-4 mb-8 flex items-center gap-3">
@@ -76,7 +249,7 @@ function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="mb-8">
+      <div className="mb-6 flex-shrink-0">
         <div className="flex items-start justify-between">
           <div className="flex-1 pr-4">
             <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
@@ -100,10 +273,10 @@ function Home() {
       </div>
 
       {/* SOS Button */}
-      <div className="bg-gray-100 rounded-3xl p-8 mb-8 flex flex-col items-center">
+      <div className="bg-gray-100 rounded-3xl p-6 mb-6 flex flex-col items-center flex-shrink-0">
         <button 
           onClick={handleSOSTap}
-          className="relative w-56 h-56 rounded-full bg-gradient-to-br from-red-400 to-red-500 shadow-2xl flex items-center justify-center transform transition-transform active:scale-95 group"
+          className="relative w-48 h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-red-400 to-red-500 shadow-2xl flex items-center justify-center transform transition-transform active:scale-95 group"
           style={{
             boxShadow: '0 20px 60px rgba(255, 123, 123, 0.3), inset 0 -5px 20px rgba(0, 0, 0, 0.1)'
           }}
@@ -123,7 +296,7 @@ function Home() {
       </div>
 
       {/* Activation Methods */}
-      <div className="mb-8">
+      <div className="mt-2 flex-shrink-0">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Activation Methods</h2>
         
         {/* 3-Tap Mode */}
@@ -135,7 +308,7 @@ function Home() {
             <span className="font-semibold text-gray-800">3-Tap Mode:</span>
           </div>
           <button 
-            onClick={() => setThreeTapMode(!threeTapMode)}
+            onClick={toggleThreeTap}
             className={`font-bold text-sm px-3 py-1 rounded ${
               threeTapMode ? 'text-green-600' : 'text-red-500'
             }`}
@@ -153,7 +326,7 @@ function Home() {
             <span className="font-semibold text-gray-800">Safe Word:</span>
           </div>
           <button 
-            onClick={() => setSafeWordMode(!safeWordMode)}
+            onClick={toggleSafeWord}
             className={`font-bold text-sm px-3 py-1 rounded ${
               safeWordMode ? 'text-green-600' : 'text-red-500'
             }`}
@@ -162,6 +335,51 @@ function Home() {
           </button>
         </div>
       </div>
+
+      {/* Full-screen modals for SOS sent / Nearby alert */}
+      {sosStatus && showSosModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl">{sosStatus.type === 'success' ? '✅' : '⚠️'}</span>
+              <div>
+                <h2 className="font-semibold text-gray-900 mb-1">
+                  {sosStatus.type === 'success' ? 'SOS Sent' : 'SOS Failed'}
+                </h2>
+                <p className="text-sm text-gray-700">{sosStatus.message}</p>
+              </div>
+            </div>
+            <button
+              className="w-full mt-2 rounded-xl bg-gray-900 text-white py-2 text-sm font-semibold"
+              onClick={() => setShowSosModal(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {nearbyAlert && showNearbyModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl">🚨</span>
+              <div>
+                <h2 className="font-semibold text-gray-900 mb-1">Nearby SOS Alert</h2>
+                <p className="text-sm text-gray-700">
+                  Someone within about 1 mile has triggered SOS. Check your surroundings and stay safe.
+                </p>
+              </div>
+            </div>
+            <button
+              className="w-full mt-2 rounded-xl bg-red-600 text-white py-2 text-sm font-semibold"
+              onClick={() => setShowNearbyModal(false)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

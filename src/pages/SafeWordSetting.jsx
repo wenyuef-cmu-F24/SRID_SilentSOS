@@ -1,38 +1,51 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function SafeWordSetting() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [safeWords, setSafeWords] = useState([])
 
   useEffect(() => {
-    loadSafeWords()
-  }, [])
-
-  const loadSafeWords = () => {
-    const saved = JSON.parse(localStorage.getItem('safeWords') || '[]')
-    // Add default if empty
-    if (saved.length === 0) {
-      const defaultWord = {
-        id: 1,
-        word: 'February thirty first',
-        notifyEmergencyContact: true,
-        notifyNearby: true,
-        callPolice: true,
-        activate: true,
+    const loadSafeWords = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/safe-words`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setSafeWords(data)
+      } catch {
+        // ignore
       }
-      saved.push(defaultWord)
-      localStorage.setItem('safeWords', JSON.stringify(saved))
     }
-    setSafeWords(saved)
-  }
+    if (token) loadSafeWords()
+  }, [token])
 
   const handleToggle = (wordId, field) => {
     const updated = safeWords.map(word => 
       word.id === wordId ? { ...word, [field]: !word[field] } : word
     )
     setSafeWords(updated)
-    localStorage.setItem('safeWords', JSON.stringify(updated))
+    const target = updated.find(w => w.id === wordId)
+    const save = async () => {
+      try {
+        await fetch(`${API_BASE}/safe-words/${wordId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(target),
+        })
+      } catch {
+        // ignore
+      }
+    }
+    save()
   }
 
   const handleEdit = (wordId) => {
@@ -43,16 +56,39 @@ function SafeWordSetting() {
         w.id === wordId ? { ...w, word: newWord.trim() } : w
       )
       setSafeWords(updated)
-      localStorage.setItem('safeWords', JSON.stringify(updated))
+      const target = updated.find(w => w.id === wordId)
+      const save = async () => {
+        try {
+          await fetch(`${API_BASE}/safe-words/${wordId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(target),
+          })
+        } catch {
+          // ignore
+        }
+      }
+      save()
     }
   }
 
   const handleDelete = (wordId) => {
-    if (window.confirm('Are you sure you want to delete this safe word?')) {
-      const updated = safeWords.filter(w => w.id !== wordId)
-      setSafeWords(updated)
-      localStorage.setItem('safeWords', JSON.stringify(updated))
+    if (!window.confirm('Are you sure you want to delete this safe word?')) return
+    const remove = async () => {
+      try {
+        await fetch(`${API_BASE}/safe-words/${wordId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setSafeWords(prev => prev.filter(w => w.id !== wordId))
+      } catch {
+        alert('Failed to delete safe word')
+      }
     }
+    remove()
   }
 
   return (

@@ -1,49 +1,50 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function EmergencyContact() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [contacts, setContacts] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Load contacts from localStorage on mount
+  // Load contacts from backend when token changes
   useEffect(() => {
-    const savedContacts = JSON.parse(localStorage.getItem('emergencyContacts') || '[]')
-    
-    // If no contacts in localStorage, add default ones
-    if (savedContacts.length === 0) {
-      const defaultContacts = [
-        { id: 1, name: 'Father', phone: '+1(000)000-0000', relationship: 'Father' },
-        { id: 2, name: 'Sister', phone: '+1(000)000-0000', relationship: 'Sister' },
-      ]
-      localStorage.setItem('emergencyContacts', JSON.stringify(defaultContacts))
-      setContacts(defaultContacts)
-    } else {
-      setContacts(savedContacts)
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/contacts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setContacts(data)
+      } catch {
+        // ignore
+      }
     }
-  }, [])
-
-  // Refresh contacts when page gains focus
-  useEffect(() => {
-    const handleFocus = () => {
-      const savedContacts = JSON.parse(localStorage.getItem('emergencyContacts') || '[]')
-      setContacts(savedContacts)
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [])
+    if (token) load()
+  }, [token])
 
   const handleAddContact = () => {
     navigate('/add-contact')
   }
 
   const handleDeleteContact = (id) => {
-    if (window.confirm('Are you sure you want to delete this contact?')) {
-      const updatedContacts = contacts.filter(contact => contact.id !== id)
-      setContacts(updatedContacts)
-      localStorage.setItem('emergencyContacts', JSON.stringify(updatedContacts))
+    if (!window.confirm('Are you sure you want to delete this contact?')) return
+    const remove = async () => {
+      try {
+        await fetch(`${API_BASE}/contacts/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setContacts(prev => prev.filter(contact => contact.id !== id))
+      } catch {
+        alert('Failed to delete contact')
+      }
     }
+    remove()
   }
 
   const filteredContacts = contacts.filter(contact =>

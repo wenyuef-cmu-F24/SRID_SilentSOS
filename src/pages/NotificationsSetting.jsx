@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API_BASE = 'http://localhost:4000/api'
 
 function NotificationsSetting() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [settings, setSettings] = useState({
     nearbyAlerts: true,
     detailedPrompt: false,
@@ -11,14 +15,26 @@ function NotificationsSetting() {
   })
 
   useEffect(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}')
-    setSettings({
-      nearbyAlerts: savedSettings.nearbyAlerts ?? true,
-      detailedPrompt: savedSettings.detailedPrompt ?? false,
-      sound: savedSettings.sound ?? false,
-      vibration: savedSettings.vibration ?? true,
-    })
-  }, [])
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const noti = data.notifications || {}
+        setSettings({
+          nearbyAlerts: noti.nearbyAlerts ?? true,
+          detailedPrompt: noti.detailedPrompt ?? false,
+          sound: noti.sound ?? false,
+          vibration: noti.vibration ?? true,
+        })
+      } catch {
+        // ignore
+      }
+    }
+    if (token) load()
+  }, [token])
 
   const handleToggle = (field) => {
     const newSettings = {
@@ -26,7 +42,21 @@ function NotificationsSetting() {
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    localStorage.setItem('notificationSettings', JSON.stringify(newSettings))
+    const save = async () => {
+      try {
+        await fetch(`${API_BASE}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notifications: newSettings }),
+        })
+      } catch {
+        // ignore
+      }
+    }
+    save()
   }
 
   const notificationOptions = [
