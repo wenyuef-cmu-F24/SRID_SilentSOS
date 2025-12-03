@@ -14,6 +14,7 @@ import ThreeTapSetting from './pages/ThreeTapSetting'
 import SafeWordSetting from './pages/SafeWordSetting'
 import AddSafeWord from './pages/AddSafeWord'
 import NotificationsSetting from './pages/NotificationsSetting'
+import EmergencyAlert from './pages/EmergencyAlert'
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/setting/safe-word" element={<SafeWordSetting />} />
         <Route path="/setting/safe-word/add" element={<AddSafeWord />} />
         <Route path="/setting/notifications" element={<NotificationsSetting />} />
+        <Route path="/emergency-alert" element={<EmergencyAlert />} />
       </Routes>
     </Router>
   )
