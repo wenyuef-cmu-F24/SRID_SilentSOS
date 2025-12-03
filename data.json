@@ -70,6 +70,37 @@
         "lng": -122.46004331548772,
         "timestamp": 1764571611987
       }
+    },
+    {
+      "id": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "email": "1234",
+      "salt": "c073eb94f7abcff5fa393077125b0618",
+      "passwordHash": "37046f4f651c43331b1ec80a7079d0de3ee07b31e7c3edb288cb9856283316d592475e8773d3c369555541da9befa05518ba24b024371e6e59e2fd7568d60379",
+      "profile": {
+        "name": "1234",
+        "phone": "",
+        "email": "1234"
+      },
+      "contacts": [],
+      "safeWords": [],
+      "settings": {
+        "threeTap": {
+          "notifyEmergencyContact": true,
+          "notifyNearby": true,
+          "callPolice": true
+        },
+        "notifications": {
+          "nearbyAlerts": true,
+          "detailedPrompt": false,
+          "sound": false,
+          "vibration": true
+        }
+      },
+      "lastLocation": {
+        "lat": 39.85878152902315,
+        "lng": -104.6768626961216,
+        "timestamp": 1764730904975
+      }
     }
   ],
   "sosEvents": [
@@ -248,6 +279,34 @@
         "callPolice": true
       },
       "timestamp": 1764571611987
+    },
+    {
+      "id": "ee055aeb-74f1-4a95-b0a9-283e57bc0b65",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 39.85877876369085,
+      "lng": -104.67686994416434,
+      "type": "3-tap",
+      "locationText": "Lat 39.8588, Lng -104.6769",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": true
+      },
+      "timestamp": 1764730593203
+    },
+    {
+      "id": "c20211ff-5409-42fb-8dd3-7e8e8a2a9a48",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 39.85877876369085,
+      "lng": -104.67686994416434,
+      "type": "3-tap",
+      "locationText": "Lat 39.8588, Lng -104.6769",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": true
+      },
+      "timestamp": 1764730595159
     }
   ],
   "alerts": [

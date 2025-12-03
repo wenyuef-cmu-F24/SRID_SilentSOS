@@ -14,6 +14,7 @@ import ThreeTapSetting from './pages/ThreeTapSetting'
 import SafeWordSetting from './pages/SafeWordSetting'
 import AddSafeWord from './pages/AddSafeWord'
 import NotificationsSetting from './pages/NotificationsSetting'
+import EmergencyAlert from './pages/EmergencyAlert'
 import AuthPage from './pages/Auth'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
@@ -119,6 +120,14 @@ function App() {
             element={(
               <PrivateRoute>
                 <NotificationsSetting />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/emergency-alert"
+            element={(
+              <PrivateRoute>
+                <EmergencyAlert />
               </PrivateRoute>
             )}
           />
