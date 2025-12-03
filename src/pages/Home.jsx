@@ -554,13 +554,11 @@ function Home() {
             </p>
           </div>
           <div className="flex-shrink-0 w-32 h-32 mt-2">
-            <svg viewBox="0 0 200 200" className="w-full h-full">
-              <ellipse cx="100" cy="140" rx="60" ry="50" fill="#C8E6A0" opacity="0.6"/>
-              <circle cx="85" cy="80" r="25" fill="#B4A5D6"/>
-              <path d="M 85 105 Q 70 120 75 145" stroke="#A5C8FF" strokeWidth="20" fill="none" strokeLinecap="round"/>
-              <circle cx="115" cy="75" r="22" fill="#3B3561"/>
-              <path d="M 115 97 Q 130 115 125 140" stroke="#3B3561" strokeWidth="18" fill="none" strokeLinecap="round"/>
-            </svg>
+            <img 
+              src="/logo.png" 
+              alt="SilentSOS" 
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </div>
