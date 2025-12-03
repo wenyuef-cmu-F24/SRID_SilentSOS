@@ -24,6 +24,18 @@ function Home() {
   const [transcript, setTranscript] = useState('')
   
   const recognitionRef = useRef(null)
+  const isListeningRef = useRef(false)
+  const safeWordsRef = useRef([])
+  const triggerSOSRef = useRef(null)
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isListeningRef.current = isListening
+  }, [isListening])
+
+  useEffect(() => {
+    safeWordsRef.current = safeWords
+  }, [safeWords])
 
   // Restore 3-tap and safe word toggles when returning to Home
   useEffect(() => {
@@ -41,74 +53,77 @@ function Home() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('safeWords') || '[]')
     setSafeWords(saved)
+    console.log('Loaded safe words:', saved)
   }, [])
 
-  // Initialize Speech Recognition
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
-      
-      recognition.onresult = (event) => {
-        let finalTranscript = ''
-        let interimTranscript = ''
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript
-          } else {
-            interimTranscript += transcript
+  // Reverse geocoding - convert coordinates to address
+  const getAddressFromCoords = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
           }
         }
+      )
+      const data = await response.json()
+      
+      if (data && data.address) {
+        const addr = data.address
+        // Build a readable address
+        const parts = []
         
-        const fullTranscript = (finalTranscript || interimTranscript).toLowerCase()
-        setTranscript(fullTranscript)
+        // Street address
+        if (addr.house_number && addr.road) {
+          parts.push(`${addr.house_number} ${addr.road}`)
+        } else if (addr.road) {
+          parts.push(addr.road)
+        } else if (addr.building || addr.amenity) {
+          parts.push(addr.building || addr.amenity)
+        }
         
-        // Check if any safe word was spoken
-        const activeSafeWords = safeWords.filter(sw => sw.enabled !== false)
-        for (const sw of activeSafeWords) {
-          if (fullTranscript.includes(sw.word.toLowerCase())) {
-            triggerSOS('safe-word', sw)
-            break
+        // City/Town
+        const city = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood
+        if (city) {
+          parts.push(city)
+        }
+        
+        // State/Region (abbreviated if possible)
+        if (addr.state) {
+          // Common US state abbreviations
+          const stateAbbr = {
+            'California': 'CA', 'New York': 'NY', 'Texas': 'TX', 'Florida': 'FL',
+            'Pennsylvania': 'PA', 'Illinois': 'IL', 'Ohio': 'OH', 'Georgia': 'GA',
+            'North Carolina': 'NC', 'Michigan': 'MI', 'New Jersey': 'NJ', 'Virginia': 'VA',
+            'Washington': 'WA', 'Arizona': 'AZ', 'Massachusetts': 'MA', 'Tennessee': 'TN',
+            'Indiana': 'IN', 'Missouri': 'MO', 'Maryland': 'MD', 'Wisconsin': 'WI',
+            'Colorado': 'CO', 'Minnesota': 'MN', 'South Carolina': 'SC', 'Alabama': 'AL',
+            'Louisiana': 'LA', 'Kentucky': 'KY', 'Oregon': 'OR', 'Oklahoma': 'OK',
+            'Connecticut': 'CT', 'Utah': 'UT', 'Iowa': 'IA', 'Nevada': 'NV',
+            'Arkansas': 'AR', 'Mississippi': 'MS', 'Kansas': 'KS', 'New Mexico': 'NM',
+            'Nebraska': 'NE', 'Idaho': 'ID', 'West Virginia': 'WV', 'Hawaii': 'HI',
+            'New Hampshire': 'NH', 'Maine': 'ME', 'Montana': 'MT', 'Rhode Island': 'RI',
+            'Delaware': 'DE', 'South Dakota': 'SD', 'North Dakota': 'ND', 'Alaska': 'AK',
+            'Vermont': 'VT', 'Wyoming': 'WY', 'District of Columbia': 'DC'
           }
+          parts.push(stateAbbr[addr.state] || addr.state)
         }
+        
+        if (parts.length > 0) {
+          return parts.join(', ')
+        }
+        
+        // Fallback to display_name if we couldn't parse
+        return data.display_name.split(',').slice(0, 3).join(',')
       }
       
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error)
-        if (event.error === 'not-allowed') {
-          setSosStatus({
-            type: 'error',
-            message: 'Microphone access denied. Please enable microphone permissions.'
-          })
-        }
-      }
-      
-      recognition.onend = () => {
-        // Restart if still in listening mode
-        if (isListening && recognitionRef.current) {
-          try {
-            recognitionRef.current.start()
-          } catch (e) {
-            console.log('Recognition restart failed:', e)
-          }
-        }
-      }
-      
-      recognitionRef.current = recognition
+      return null
+    } catch (error) {
+      console.log('Geocoding error:', error)
+      return null
     }
-    
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-    }
-  }, [safeWords, isListening])
+  }
 
   // Get current location once and send to backend
   useEffect(() => {
@@ -120,10 +135,21 @@ function Home() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords
         setCoords({ lat: latitude, lng: longitude })
-        setCurrentLocation(`Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`)
+        
+        // First show coordinates while fetching address
+        setCurrentLocation('Getting address...')
+        
+        // Try to get readable address
+        const address = await getAddressFromCoords(latitude, longitude)
+        if (address) {
+          setCurrentLocation(address)
+        } else {
+          // Fallback to coordinates if geocoding fails
+          setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
+        }
 
         fetch(`${API_BASE}/location`, {
           method: 'POST',
@@ -140,31 +166,17 @@ function Home() {
     )
   }, [token])
 
-  useEffect(() => {
-    if (tapCount === 3 && threeTapMode) {
-      triggerSOS('3-tap')
-      setTapCount(0)
-    }
-    
-    // Reset tap count after 2 seconds
-    if (tapCount > 0) {
-      const timer = setTimeout(() => setTapCount(0), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [tapCount, threeTapMode])
-
-  const handleSOSTap = () => {
-    if (threeTapMode) {
-      setTapCount(prev => prev + 1)
-    } else {
-      triggerSOS('direct')
-    }
-  }
-
+  // Define triggerSOS first and store in ref
   const triggerSOS = useCallback(async (type, safeWord = null) => {
+    console.log('🚨 triggerSOS called:', type, safeWord)
+    
     // Stop listening when SOS is triggered
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {
+        console.log('Stop recognition error:', e)
+      }
     }
     setIsListening(false)
 
@@ -182,7 +194,6 @@ function Home() {
     // Get settings based on trigger type
     let settings = {}
     if (type === '3-tap' || type === 'direct') {
-      // Load 3-Tap settings
       const threeTapSettings = JSON.parse(localStorage.getItem('threeTapSettings') || '{}')
       settings = {
         notifyEmergencyContact: threeTapSettings.notifyEmergencyContact ?? true,
@@ -190,7 +201,6 @@ function Home() {
         callPolice: threeTapSettings.callPolice ?? true,
       }
     } else if (type === 'safe-word' && safeWord) {
-      // Use safe word specific settings
       settings = {
         notifyEmergencyContact: safeWord.notifyEmergencyContact ?? true,
         notifyNearby: safeWord.notifyNearby ?? true,
@@ -229,6 +239,128 @@ function Home() {
     })
   }, [coords, currentLocation, token, navigate])
 
+  // Keep triggerSOS ref updated
+  useEffect(() => {
+    triggerSOSRef.current = triggerSOS
+  }, [triggerSOS])
+
+  // Initialize Speech Recognition - only once
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    
+    if (!SpeechRecognition) {
+      console.log('Speech Recognition not supported')
+      return
+    }
+
+    console.log('Initializing Speech Recognition...')
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    
+    recognition.onstart = () => {
+      console.log('🎤 Speech recognition started')
+    }
+    
+    recognition.onresult = (event) => {
+      let finalTranscript = ''
+      let interimTranscript = ''
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript
+        if (event.results[i].isFinal) {
+          finalTranscript += text
+        } else {
+          interimTranscript += text
+        }
+      }
+      
+      const fullTranscript = (finalTranscript || interimTranscript).toLowerCase().trim()
+      console.log('🗣️ Heard:', fullTranscript)
+      setTranscript(fullTranscript)
+      
+      // Check if any safe word was spoken - use ref for latest value
+      const currentSafeWords = safeWordsRef.current
+      const activeSafeWords = currentSafeWords.filter(sw => sw.enabled !== false)
+      
+      console.log('Checking against safe words:', activeSafeWords.map(sw => sw.word))
+      
+      for (const sw of activeSafeWords) {
+        if (fullTranscript.includes(sw.word.toLowerCase())) {
+          console.log('✅ Safe word detected:', sw.word)
+          // Use ref to get latest triggerSOS function
+          if (triggerSOSRef.current) {
+            triggerSOSRef.current('safe-word', sw)
+          }
+          break
+        }
+      }
+    }
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      if (event.error === 'not-allowed') {
+        setSosStatus({
+          type: 'error',
+          message: 'Microphone access denied. Please enable microphone permissions.'
+        })
+        setIsListening(false)
+      } else if (event.error === 'no-speech') {
+        console.log('No speech detected, continuing...')
+      } else if (event.error === 'aborted') {
+        console.log('Recognition aborted')
+      }
+    }
+    
+    recognition.onend = () => {
+      console.log('Speech recognition ended, isListening:', isListeningRef.current)
+      // Restart if still in listening mode - use ref for latest value
+      if (isListeningRef.current) {
+        console.log('Restarting recognition...')
+        setTimeout(() => {
+          try {
+            recognition.start()
+          } catch (e) {
+            console.log('Recognition restart failed:', e)
+          }
+        }, 100)
+      }
+    }
+    
+    recognitionRef.current = recognition
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, []) // Empty dependency - only initialize once
+
+  useEffect(() => {
+    if (tapCount === 3 && threeTapMode) {
+      triggerSOS('3-tap')
+      setTapCount(0)
+    }
+    
+    if (tapCount > 0) {
+      const timer = setTimeout(() => setTapCount(0), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [tapCount, threeTapMode, triggerSOS])
+
+  const handleSOSTap = () => {
+    if (threeTapMode) {
+      setTapCount(prev => prev + 1)
+    } else {
+      triggerSOS('direct')
+    }
+  }
+
   const toggleListening = () => {
     if (!safeWordMode) {
       setSosStatus({
@@ -241,21 +373,40 @@ function Home() {
     if (!recognitionRef.current) {
       setSosStatus({
         type: 'error',
-        message: 'Voice recognition not supported in this browser'
+        message: 'Voice recognition not supported in this browser. Try Chrome or Edge.'
+      })
+      return
+    }
+
+    // Check if we have safe words
+    if (safeWords.length === 0) {
+      setSosStatus({
+        type: 'error',
+        message: 'Please add safe words in Settings first'
       })
       return
     }
     
     if (isListening) {
-      recognitionRef.current.stop()
+      console.log('Stopping listening...')
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {
+        console.log('Stop error:', e)
+      }
       setIsListening(false)
       setTranscript('')
     } else {
+      console.log('Starting listening...')
       try {
         recognitionRef.current.start()
         setIsListening(true)
       } catch (e) {
         console.error('Failed to start recognition:', e)
+        setSosStatus({
+          type: 'error',
+          message: 'Failed to start voice recognition. Please try again.'
+        })
       }
     }
   }
@@ -273,7 +424,11 @@ function Home() {
       const next = !prev
       localStorage.setItem(SAFE_WORD_KEY, String(next))
       if (!next && recognitionRef.current) {
-        recognitionRef.current.stop()
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // ignore
+        }
         setIsListening(false)
       }
       return next
@@ -461,6 +616,11 @@ function Home() {
                 {transcript && isListening && (
                   <p className="text-xs text-gray-500 mt-1 italic max-w-[200px] truncate">"{transcript}"</p>
                 )}
+                {isListening && safeWords.length > 0 && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Safe words: {safeWords.filter(sw => sw.enabled !== false).map(sw => sw.word).join(', ')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -561,3 +721,5 @@ function Home() {
 }
 
 export default Home
+
+
