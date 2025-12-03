@@ -49,12 +49,26 @@ function Home() {
     }
   }, [])
 
-  // Load safe words from localStorage
+  // Load safe words from backend API
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('safeWords') || '[]')
-    setSafeWords(saved)
-    console.log('Loaded safe words:', saved)
-  }, [])
+    const loadSafeWords = async () => {
+      if (!token) return
+      
+      try {
+        const res = await fetch(`${API_BASE}/safe-words`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        console.log('Loaded safe words from API:', data)
+        setSafeWords(data)
+      } catch (error) {
+        console.log('Failed to load safe words:', error)
+      }
+    }
+    
+    loadSafeWords()
+  }, [token])
 
   // Reverse geocoding - convert coordinates to address
   const getAddressFromCoords = async (latitude, longitude) => {
@@ -282,7 +296,8 @@ function Home() {
       
       // Check if any safe word was spoken - use ref for latest value
       const currentSafeWords = safeWordsRef.current
-      const activeSafeWords = currentSafeWords.filter(sw => sw.enabled !== false)
+      // Check both 'activate' (from backend) and 'enabled' fields
+      const activeSafeWords = currentSafeWords.filter(sw => sw.activate !== false && sw.enabled !== false)
       
       console.log('Checking against safe words:', activeSafeWords.map(sw => sw.word))
       

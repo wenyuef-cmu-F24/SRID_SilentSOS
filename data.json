@@ -97,9 +97,9 @@
         }
       },
       "lastLocation": {
-        "lat": 39.85877652713868,
-        "lng": -104.67687403213289,
-        "timestamp": 1764731366530
+        "lat": 39.85875555823101,
+        "lng": -104.67681871242915,
+        "timestamp": 1764731574240
       }
     },
     {
@@ -112,7 +112,16 @@
         "phone": "",
         "email": "123456"
       },
-      "contacts": [],
+      "contacts": [
+        {
+          "id": "dad420f5-5909-4e59-a550-97ff63d7c88a",
+          "name": "Mom",
+          "relationship": "Mom",
+          "phone": "7179035777",
+          "email": "wenyuefan37@gmail.com",
+          "shareLocation": true
+        }
+      ],
       "safeWords": [],
       "settings": {
         "threeTap": {
@@ -128,9 +137,9 @@
         }
       },
       "lastLocation": {
-        "lat": 39.85877629743939,
-        "lng": -104.67686867131943,
-        "timestamp": 1764731302246
+        "lat": 39.85875555823101,
+        "lng": -104.67681871242915,
+        "timestamp": 1764731573334
       }
     }
   ],
@@ -394,6 +403,34 @@
         "callPolice": false
       },
       "timestamp": 1764731292860
+    },
+    {
+      "id": "503a18f8-96c5-401b-bcba-bf99eead68c2",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85878031408782,
+      "lng": -104.67687355671578,
+      "type": "safe-word",
+      "locationText": "8500 North Oak Hill Street, Denver, CO",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764731409565
+    },
+    {
+      "id": "13ed3c52-eb8e-4ae6-a499-2bedc5f79634",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85878031408782,
+      "lng": -104.67687355671578,
+      "type": "safe-word",
+      "locationText": "8500 North Oak Hill Street, Denver, CO",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764731409802
     }
   ],
   "alerts": [
