@@ -1,12 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function AddContact() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     relationship: '',
@@ -22,7 +19,7 @@ function AddContact() {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
     if (!formData.name.trim()) {
       alert('Please enter a name')
@@ -33,27 +30,16 @@ function AddContact() {
       return
     }
 
-    const save = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/contacts`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        })
-        if (!res.ok) {
-          alert('Failed to save contact')
-          return
-        }
-        navigate('/emergency-contact')
-      } catch {
+    try {
+      const res = await api.post('/contacts', formData)
+      if (!res.ok) {
         alert('Failed to save contact')
+        return
       }
+      navigate('/emergency-contact')
+    } catch {
+      alert('Failed to save contact')
     }
-
-    save()
   }
 
   return (
@@ -174,4 +160,3 @@ function AddContact() {
 }
 
 export default AddContact
-

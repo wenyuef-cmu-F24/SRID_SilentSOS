@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 const THREE_TAP_KEY = 'home_threeTapMode'
 const SAFE_WORD_KEY = 'home_safeWordMode'
 
 function Home() {
-  const { token } = useAuth()
   const navigate = useNavigate()
   const [tapCount, setTapCount] = useState(0)
   const [isListening, setIsListening] = useState(false)
@@ -52,12 +50,8 @@ function Home() {
   // Load safe words from backend API
   useEffect(() => {
     const loadSafeWords = async () => {
-      if (!token) return
-      
       try {
-        const res = await fetch(`${API_BASE}/safe-words`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/safe-words')
         if (!res.ok) return
         const data = await res.json()
         console.log('Loaded safe words from API:', data)
@@ -68,7 +62,7 @@ function Home() {
     }
     
     loadSafeWords()
-  }, [token])
+  }, [])
 
   // Reverse geocoding - convert coordinates to address
   const getAddressFromCoords = async (latitude, longitude) => {
@@ -141,8 +135,6 @@ function Home() {
 
   // Get current location once and send to backend
   useEffect(() => {
-    if (!token) return
-
     if (!navigator.geolocation) {
       setCurrentLocation('Location not available')
       return
@@ -165,20 +157,14 @@ function Home() {
           setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
         }
 
-        fetch(`${API_BASE}/location`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ lat: latitude, lng: longitude }),
-        }).catch(() => {})
+        // Send location to backend
+        api.post('/location', { lat: latitude, lng: longitude }).catch(() => {})
       },
       () => {
         setCurrentLocation('Location permission denied')
       }
     )
-  }, [token])
+  }, [])
 
   // Define triggerSOS first and store in ref
   const triggerSOS = useCallback(async (type, safeWord = null) => {
@@ -223,20 +209,13 @@ function Home() {
     }
 
     // Also send to backend
-    if (coords && token) {
+    if (coords) {
       try {
-        await fetch(`${API_BASE}/sos`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            lat: coords.lat,
-            lng: coords.lng,
-            type,
-            locationText: currentLocation,
-          }),
+        await api.post('/sos', {
+          lat: coords.lat,
+          lng: coords.lng,
+          type,
+          locationText: currentLocation,
         })
       } catch (e) {
         console.log('Backend SOS notification failed:', e)
@@ -251,7 +230,7 @@ function Home() {
         settings: settings,
       }
     })
-  }, [coords, currentLocation, token, navigate])
+  }, [coords, currentLocation, navigate])
 
   // Keep triggerSOS ref updated
   useEffect(() => {
@@ -452,13 +431,9 @@ function Home() {
 
   // Poll backend for nearby alerts
   useEffect(() => {
-    if (!token) return
-
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/alerts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/alerts')
         if (!res.ok) return
         const data = await res.json()
         if (Array.isArray(data) && data.length > 0) {
@@ -467,12 +442,12 @@ function Home() {
           setShowNearbyModal(true)
         }
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [token])
+  }, [])
 
   // Auto-hide SOS status after a few seconds
   useEffect(() => {

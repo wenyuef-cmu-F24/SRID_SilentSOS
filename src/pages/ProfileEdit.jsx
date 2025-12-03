@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function ProfileEdit() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [profile, setProfile] = useState({
     name: '',
     phone: '',
@@ -16,9 +13,7 @@ function ProfileEdit() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${API_BASE}/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/profile')
         if (!res.ok) return
         const data = await res.json()
         setProfile({
@@ -27,13 +22,11 @@ function ProfileEdit() {
           email: data.email || '',
         })
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) {
-      fetchProfile()
-    }
-  }, [token])
+    fetchProfile()
+  }, [])
 
   const handleInputChange = (field, value) => {
     setProfile(prev => ({
@@ -42,7 +35,7 @@ function ProfileEdit() {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!profile.name.trim()) {
       alert('Please enter your name')
       return
@@ -52,28 +45,17 @@ function ProfileEdit() {
       return
     }
     
-    const save = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/profile`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(profile),
-        })
-        if (!res.ok) {
-          alert('Failed to save profile')
-          return
-        }
-        alert('Profile saved successfully!')
-        navigate('/setting/profile')
-      } catch {
+    try {
+      const res = await api.put('/profile', profile)
+      if (!res.ok) {
         alert('Failed to save profile')
+        return
       }
+      alert('Profile saved successfully!')
+      navigate('/setting/profile')
+    } catch {
+      alert('Failed to save profile')
     }
-
-    save()
   }
 
   return (
@@ -152,4 +134,3 @@ function ProfileEdit() {
 }
 
 export default ProfileEdit
-

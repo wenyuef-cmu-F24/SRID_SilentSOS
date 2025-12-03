@@ -1,31 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function ProfileHistory() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [history, setHistory] = useState([])
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const res = await fetch(`${API_BASE}/history`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/history')
         if (!res.ok) return
         const data = await res.json()
         setHistory(data)
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) {
-      loadHistory()
-    }
-  }, [token])
+    loadHistory()
+  }, [])
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp)
@@ -104,4 +97,3 @@ function ProfileHistory() {
 }
 
 export default ProfileHistory
-

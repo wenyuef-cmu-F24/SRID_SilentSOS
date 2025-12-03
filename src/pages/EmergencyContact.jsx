@@ -1,50 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function EmergencyContact() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [contacts, setContacts] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Load contacts from backend when token changes
+  // Load contacts from backend
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/contacts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/contacts')
         if (!res.ok) return
         const data = await res.json()
         setContacts(data)
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) load()
-  }, [token])
+    load()
+  }, [])
 
   const handleAddContact = () => {
     navigate('/add-contact')
   }
 
-  const handleDeleteContact = (id) => {
+  const handleDeleteContact = async (id) => {
     if (!window.confirm('Are you sure you want to delete this contact?')) return
-    const remove = async () => {
-      try {
-        await fetch(`${API_BASE}/contacts/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setContacts(prev => prev.filter(contact => contact.id !== id))
-      } catch {
-        alert('Failed to delete contact')
-      }
+    try {
+      await api.delete(`/contacts/${id}`)
+      setContacts(prev => prev.filter(contact => contact.id !== id))
+    } catch {
+      alert('Failed to delete contact')
     }
-    remove()
   }
 
   const filteredContacts = contacts.filter(contact =>
@@ -166,4 +155,3 @@ function EmergencyContact() {
 }
 
 export default EmergencyContact
-

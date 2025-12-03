@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function NotificationsSetting() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [settings, setSettings] = useState({
     nearbyAlerts: true,
     detailedPrompt: false,
@@ -17,9 +14,7 @@ function NotificationsSetting() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/settings')
         if (!res.ok) return
         const data = await res.json()
         const noti = data.notifications || {}
@@ -30,33 +25,23 @@ function NotificationsSetting() {
           vibration: noti.vibration ?? true,
         })
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) load()
-  }, [token])
+    load()
+  }, [])
 
-  const handleToggle = (field) => {
+  const handleToggle = async (field) => {
     const newSettings = {
       ...settings,
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    const save = async () => {
-      try {
-        await fetch(`${API_BASE}/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ notifications: newSettings }),
-        })
-      } catch {
-        // ignore
-      }
+    try {
+      await api.put('/settings', { notifications: newSettings })
+    } catch {
+      // ignore - api.js handles 401
     }
-    save()
   }
 
   const notificationOptions = [
@@ -111,4 +96,3 @@ function NotificationsSetting() {
 }
 
 export default NotificationsSetting
-
