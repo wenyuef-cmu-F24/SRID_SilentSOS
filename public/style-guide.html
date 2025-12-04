@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SilentSOS Style Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .color-box { width: 80px; height: 80px; border-radius: 12px; }
+    .component-card { background: #f8f9fa; border-radius: 16px; padding: 24px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-red-400 to-red-500 text-white py-12 px-6">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-5xl font-bold mb-2">SilentSOS</h1>
+      <p class="text-xl opacity-90">Design System & Style Guide</p>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-12">
+    
+    <!-- Colors Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Colors</h2>
+      
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Primary</h3>
+      <div class="flex flex-wrap gap-6 mb-8">
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #FF7B7B;"></div>
+          <p class="font-semibold text-sm">Primary Red</p>
+          <p class="text-xs text-gray-500">#FF7B7B</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #EE5A5A;"></div>
+          <p class="font-semibold text-sm">Red Dark</p>
+          <p class="text-xs text-gray-500">#EE5A5A</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #C8E6A0;"></div>
+          <p class="font-semibold text-sm">Accent Green</p>
+          <p class="text-xs text-gray-500">#C8E6A0</p>
+        </div>
+      </div>
+
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Semantic</h3>
+      <div class="flex flex-wrap gap-6 mb-8">
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #22C55E;"></div>
+          <p class="font-semibold text-sm">Success</p>
+          <p class="text-xs text-gray-500">#22C55E</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #F97316;"></div>
+          <p class="font-semibold text-sm">Warning</p>
+          <p class="text-xs text-gray-500">#F97316</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #EF4444;"></div>
+          <p class="font-semibold text-sm">Error</p>
+          <p class="text-xs text-gray-500">#EF4444</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #3B82F6;"></div>
+          <p class="font-semibold text-sm">Info</p>
+          <p class="text-xs text-gray-500">#3B82F6</p>
+        </div>
+      </div>
+
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Neutrals</h3>
+      <div class="flex flex-wrap gap-6">
+        <div class="text-center">
+          <div class="color-box mb-2 border" style="background: #FFFFFF;"></div>
+          <p class="font-semibold text-sm">White</p>
+          <p class="text-xs text-gray-500">#FFFFFF</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #F5F5F7;"></div>
+          <p class="font-semibold text-sm">Background</p>
+          <p class="text-xs text-gray-500">#F5F5F7</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #E5E7EB;"></div>
+          <p class="font-semibold text-sm">Gray 200</p>
+          <p class="text-xs text-gray-500">#E5E7EB</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #6B7280;"></div>
+          <p class="font-semibold text-sm">Gray 500</p>
+          <p class="text-xs text-gray-500">#6B7280</p>
+        </div>
+        <div class="text-center">
+          <div class="color-box mb-2" style="background: #111827;"></div>
+          <p class="font-semibold text-sm">Gray 900</p>
+          <p class="text-xs text-gray-500">#111827</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Typography</h2>
+      
+      <div class="component-card mb-6">
+        <p class="text-xs text-gray-500 mb-2">Font Family</p>
+        <p class="text-2xl font-semibold">Inter</p>
+        <p class="text-gray-500">Google Fonts</p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-baseline justify-between border-b pb-4">
+          <div>
+            <p class="text-4xl font-bold">Display</p>
+            <p class="text-sm text-gray-500">Page titles</p>
+          </div>
+          <p class="text-sm text-gray-400">48px / Bold</p>
+        </div>
+        <div class="flex items-baseline justify-between border-b pb-4">
+          <div>
+            <p class="text-3xl font-bold">Heading 1</p>
+            <p class="text-sm text-gray-500">Section headers</p>
+          </div>
+          <p class="text-sm text-gray-400">30px / Bold</p>
+        </div>
+        <div class="flex items-baseline justify-between border-b pb-4">
+          <div>
+            <p class="text-xl font-bold">Heading 2</p>
+            <p class="text-sm text-gray-500">Card titles</p>
+          </div>
+          <p class="text-sm text-gray-400">20px / Bold</p>
+        </div>
+        <div class="flex items-baseline justify-between border-b pb-4">
+          <div>
+            <p class="text-base font-medium">Body</p>
+            <p class="text-sm text-gray-500">Main content</p>
+          </div>
+          <p class="text-sm text-gray-400">16px / Medium</p>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <div>
+            <p class="text-sm">Small / Caption</p>
+            <p class="text-sm text-gray-500">Labels, hints</p>
+          </div>
+          <p class="text-sm text-gray-400">14px / Regular</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Components Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Components</h2>
+      
+      <!-- SOS Button -->
+      <div class="component-card mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">SOS Button</h3>
+        <div class="flex items-center gap-8">
+          <button class="w-32 h-32 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+            style="background: linear-gradient(145deg, #ff6b6b, #ee5a5a); box-shadow: 0 20px 60px rgba(255, 123, 123, 0.3);">
+            SOS
+          </button>
+          <div class="text-sm text-gray-600">
+            <p><strong>Size:</strong> 192×192px</p>
+            <p><strong>Shape:</strong> Circle</p>
+            <p><strong>Gradient:</strong> #FF6B6B → #EE5A5A</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Standard Buttons -->
+      <div class="component-card mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">Buttons</h3>
+        <div class="flex flex-wrap gap-4">
+          <button class="bg-gray-900 text-white px-6 py-3 rounded-2xl font-semibold">
+            Primary
+          </button>
+          <button class="bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl font-semibold">
+            Secondary
+          </button>
+          <button class="bg-gradient-to-r from-red-400 to-rose-400 text-white px-6 py-3 rounded-2xl font-bold">
+            Danger
+          </button>
+          <button class="bg-gradient-to-r from-green-400 to-green-500 text-white px-6 py-3 rounded-2xl font-bold">
+            Success
+          </button>
+        </div>
+      </div>
+
+      <!-- Icon Buttons -->
+      <div class="component-card mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">Icon Buttons</h3>
+        <div class="flex gap-4">
+          <button class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <button class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-gray-900">
+            <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Toggle Switch -->
+      <div class="component-card mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">Toggle Switch</h3>
+        <div class="flex gap-8 items-center">
+          <div class="flex items-center gap-3">
+            <span class="text-sm">OFF</span>
+            <div class="relative w-14 h-8 bg-gray-300 rounded-full">
+              <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm">ON</span>
+            <div class="relative w-14 h-8 bg-green-500 rounded-full">
+              <div class="absolute top-1 right-1 w-6 h-6 bg-white rounded-full shadow-md"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="component-card mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">Cards</h3>
+        <div class="flex gap-6">
+          <div class="bg-white rounded-2xl shadow-sm p-4 w-48">
+            <p class="font-semibold">Standard Card</p>
+            <p class="text-sm text-gray-500">rounded-2xl</p>
+          </div>
+          <div class="bg-white rounded-3xl shadow-sm p-6 w-48">
+            <p class="font-semibold">Large Card</p>
+            <p class="text-sm text-gray-500">rounded-3xl</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="component-card">
+        <h3 class="font-semibold text-gray-700 mb-4">Input Field</h3>
+        <input type="text" placeholder="Search..." 
+          class="bg-gray-200 rounded-2xl px-4 py-3 w-64 outline-none focus:ring-2 focus:ring-orange-300">
+      </div>
+    </section>
+
+    <!-- Spacing Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Spacing & Layout</h2>
+      
+      <div class="grid grid-cols-2 gap-6">
+        <div class="component-card">
+          <h3 class="font-semibold text-gray-700 mb-4">Page Layout</h3>
+          <ul class="text-sm space-y-2 text-gray-600">
+            <li><strong>Max width:</strong> 448px (max-w-md)</li>
+            <li><strong>Horizontal padding:</strong> 24px (px-6)</li>
+            <li><strong>Top padding:</strong> 16px (pt-4)</li>
+            <li><strong>Bottom padding:</strong> 96px (pb-24)</li>
+          </ul>
+        </div>
+        <div class="component-card">
+          <h3 class="font-semibold text-gray-700 mb-4">Border Radius</h3>
+          <ul class="text-sm space-y-2 text-gray-600">
+            <li><strong>Small:</strong> 8px (rounded-lg)</li>
+            <li><strong>Medium:</strong> 16px (rounded-2xl)</li>
+            <li><strong>Large:</strong> 24px (rounded-3xl)</li>
+            <li><strong>Full:</strong> 9999px (rounded-full)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Animations Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Animations</h2>
+      
+      <div class="grid grid-cols-2 gap-6">
+        <div class="component-card text-center">
+          <div class="w-16 h-16 bg-red-400 rounded-full mx-auto mb-4 animate-pulse"></div>
+          <p class="font-semibold">Pulse</p>
+          <p class="text-sm text-gray-500">Listening state</p>
+        </div>
+        <div class="component-card text-center">
+          <div class="w-16 h-16 bg-red-400 rounded-full mx-auto mb-4 animate-ping opacity-75"></div>
+          <p class="font-semibold">Ping</p>
+          <p class="text-sm text-gray-500">SOS active rings</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-8 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="text-lg font-semibold mb-2">SilentSOS</p>
+      <p class="text-gray-400 text-sm">Style Guide v1.0 • December 2024</p>
+    </div>
+  </footer>
+</body>
+</html>
+
