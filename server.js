@@ -174,6 +174,26 @@ app.post('/api/contacts', authMiddleware, (req, res) => {
   res.status(201).json(contact);
 });
 
+app.put('/api/contacts/:id', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  const { name, relationship, phone, email, shareLocation } = req.body;
+  const data = loadData();
+  const user = data.users.find(u => u.id === req.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const contact = user.contacts.find(c => c.id === id);
+  if (!contact) return res.status(404).json({ error: 'Contact not found' });
+  if (!name || !phone) {
+    return res.status(400).json({ error: 'Name and phone are required' });
+  }
+  contact.name = name;
+  contact.relationship = relationship || '';
+  contact.phone = phone;
+  contact.email = email || '';
+  contact.shareLocation = !!shareLocation;
+  saveData(data);
+  res.json(contact);
+});
+
 app.delete('/api/contacts/:id', authMiddleware, (req, res) => {
   const { id } = req.params;
   const data = loadData();

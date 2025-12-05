@@ -18,6 +18,10 @@ function Home() {
   const [sosStatus, setSosStatus] = useState(null) // { type: 'success' | 'error', message: string }
   const [showSosModal, setShowSosModal] = useState(false)
   const [showNearbyModal, setShowNearbyModal] = useState(false)
+  const [hasSafeWord, setHasSafeWord] = useState(null) // null = unknown, true/false once loaded
+  const [hasContacts, setHasContacts] = useState(null) // null = unknown, true/false once loaded
+  const [pendingSosType, setPendingSosType] = useState(null) // '3-tap' | 'safe-word' | null
+  const [showConfirmSosModal, setShowConfirmSosModal] = useState(false)
 
   // Restore 3-tap and safe word toggles when returning to Home
   useEffect(() => {
@@ -31,8 +35,8 @@ function Home() {
     }
   }, [])
 
-  // Get current location once and send to backend
-  useEffect(() => {
+  // Helper to get current location and send to backend
+  const fetchAndSendLocation = () => {
     if (!token) return
 
     if (!navigator.geolocation) {
@@ -59,11 +63,57 @@ function Home() {
         setCurrentLocation('Location permission denied')
       }
     )
+  }
+
+  // Get current location once on load
+  useEffect(() => {
+    if (!token) return
+    fetchAndSendLocation()
+  }, [token])
+
+  // Check if the user has at least one safe word configured
+  useEffect(() => {
+    if (!token) return
+
+    const loadSafeWords = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/safe-words`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setHasSafeWord(Array.isArray(data) && data.length > 0)
+      } catch {
+        // ignore network / parse errors – feature will just behave as before
+      }
+    }
+
+    loadSafeWords()
+  }, [token])
+
+  // Check if the user has at least one emergency contact configured
+  useEffect(() => {
+    if (!token) return
+
+    const loadContacts = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/contacts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setHasContacts(Array.isArray(data) && data.length > 0)
+      } catch {
+        // ignore network / parse errors – SOS can still be sent
+      }
+    }
+
+    loadContacts()
   }, [token])
 
   useEffect(() => {
     if (tapCount === 3 && threeTapMode) {
-      triggerSOS()
+      requestSosConfirmation('3-tap')
       setTapCount(0)
     }
     
@@ -78,11 +128,33 @@ function Home() {
     if (threeTapMode) {
       setTapCount(prev => prev + 1)
     } else {
-      triggerSOS('3-tap')
+      requestSosConfirmation('3-tap')
     }
   }
 
+  const requestSosConfirmation = (type) => {
+    // If location is not ready, keep existing error behavior
+    if (!coords) {
+      setSosStatus({
+        type: 'error',
+        message: 'Location not available yet. Please enable location services.',
+      })
+      return
+    }
+    setPendingSosType(type || '3-tap')
+    setShowConfirmSosModal(true)
+  }
+
   const triggerSOS = async (type) => {
+    if (hasContacts === false) {
+      const proceed = window.confirm(
+        'You have not set any emergency contacts yet. SOS will be sent without notifying personal contacts. Do you want to continue?'
+      )
+      if (!proceed) {
+        return
+      }
+    }
+
     if (!coords) {
       setSosStatus({
         type: 'error',
@@ -133,6 +205,10 @@ function Home() {
       alert('Please enable Safe Word mode in settings first')
       return
     }
+    if (hasSafeWord === false) {
+      alert('You have not set up any Safe Words yet. Please add a Safe Word in Settings before using voice activation.')
+      return
+    }
     setIsListening(!isListening)
     if (!isListening) {
       // Simulating voice listening
@@ -141,7 +217,7 @@ function Home() {
         const heardWord = randomWords[Math.floor(Math.random() * randomWords.length)]
         console.log(`Listening for safe word... (heard: "${heardWord}")`)
         // Demo: trigger SOS when we "hear" something
-        triggerSOS('safe-word')
+        requestSosConfirmation('safe-word')
       }, 1000)
     }
   }
@@ -160,6 +236,11 @@ function Home() {
       localStorage.setItem(SAFE_WORD_KEY, String(next))
       return next
     })
+  }
+
+  const handleRefreshLocation = () => {
+    // Let users retry location or re-open the browser permission prompt
+    fetchAndSendLocation()
   }
 
   // Poll backend for nearby alerts
@@ -235,18 +316,33 @@ function Home() {
       )}
 
       {/* Location Card */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 mb-8 flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center text-2xl shadow-lg">
-          ⚡
+      <button
+        type="button"
+        onClick={handleRefreshLocation}
+        className="w-full bg-white rounded-2xl shadow-sm p-4 mb-8 flex items-center justify-between gap-3 text-left hover:bg-gray-50 active:scale-[0.99] transition"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center text-2xl shadow-lg">
+            ⚡
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Current location</p>
+            <p className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+              <span>📍</span>
+              {currentLocation}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-1">
+              Tap to refresh or enable location permission
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 font-medium">Current location</p>
-          <p className="text-sm font-semibold text-gray-800 flex items-center gap-1">
-            <span>📍</span>
-            {currentLocation}
-          </p>
+        <div className="flex items-center gap-1 text-xs font-semibold text-blue-600">
+          <span>Refresh</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582M20 20v-5h-.581M5 9a7 7 0 0111.95-2.95M19 15a7 7 0 01-11.95 2.95" />
+          </svg>
         </div>
-      </div>
+      </button>
 
       {/* Main Content */}
       <div className="mb-6 flex-shrink-0">
@@ -337,6 +433,46 @@ function Home() {
       </div>
 
       {/* Full-screen modals for SOS sent / Nearby alert */}
+      {showConfirmSosModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h2 className="font-semibold text-gray-900 mb-2">Confirm SOS</h2>
+            <p className="text-sm text-gray-700 mb-3">
+              We will send an SOS alert with your current location and use your settings to notify contacts and nearby users.
+            </p>
+            <p className="text-xs text-gray-500 mb-4">
+              Current location: {currentLocation}
+            </p>
+            <div className="flex gap-3 mt-1">
+              <button
+                className="flex-1 rounded-xl border border-gray-300 text-gray-700 py-2 text-sm font-semibold"
+                onClick={() => {
+                  setShowConfirmSosModal(false)
+                  setPendingSosType(null)
+                  setTapCount(0)
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 rounded-xl bg-red-600 text-white py-2 text-sm font-semibold"
+                onClick={() => {
+                  if (pendingSosType) {
+                    triggerSOS(pendingSosType)
+                  } else {
+                    triggerSOS('3-tap')
+                  }
+                  setShowConfirmSosModal(false)
+                  setPendingSosType(null)
+                }}
+              >
+                Send SOS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {sosStatus && showSosModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
           <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">

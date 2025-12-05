@@ -31,6 +31,10 @@ function EmergencyContact() {
     navigate('/add-contact')
   }
 
+  const handleEditContact = (contact) => {
+    navigate(`/edit-contact/${contact.id}`)
+  }
+
   const handleDeleteContact = (id) => {
     if (!window.confirm('Are you sure you want to delete this contact?')) return
     const remove = async () => {
@@ -119,28 +123,52 @@ function EmergencyContact() {
                   </h3>
                   <a
                     href={`tel:${contact.phone}`}
-                    className="text-blue-500 font-medium text-base hover:text-blue-600 block"
+                    className="flex items-center gap-2 text-blue-500 font-medium text-base hover:text-blue-600 mt-1"
                   >
-                    {contact.phone}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 5a2 2 0 012-2h2.28a1 1 0 01.948.684l1.07 3.21a1 1 0 01-.502 1.21l-1.518.759a11.042 11.042 0 005.017 5.017l.76-1.518a1 1 0 011.21-.502l3.21 1.07A1 1 0 0121 18.72V21a2 2 0 01-2 2h-.25C9.56 23 3 16.44 3 8.25V8a2 2 0 012-2z"
+                      />
+                    </svg>
+                    <span>{contact.phone}</span>
                   </a>
                   {contact.email && (
                     <a
                       href={`mailto:${contact.email}`}
-                      className="text-gray-600 text-sm hover:text-gray-800 block mt-1"
+                      className="flex items-center gap-2 text-gray-600 text-sm hover:text-gray-800 mt-1"
                     >
-                      {contact.email}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 0l8 7 8-7"
+                        />
+                      </svg>
+                      <span>{contact.email}</span>
                     </a>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDeleteContact(contact.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-3 text-red-500 hover:text-red-700"
-                  title="Delete contact"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                <div className="flex flex-col items-end gap-2 ml-3">
+                  <button
+                    onClick={() => handleEditContact(contact)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteContact(contact.id)}
+                    className="text-red-500 hover:text-red-700"
+                    title="Delete contact"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))

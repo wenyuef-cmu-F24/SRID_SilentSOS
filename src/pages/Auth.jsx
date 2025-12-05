@@ -63,10 +63,35 @@ function AuthPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Request failed');
+
+      // Safely parse JSON, handling empty or non‑JSON responses
+      let data = null;
+      try {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          if (!res.ok) {
+            throw new Error(text || 'Server returned a non‑JSON error response.');
+          }
+          throw new Error('Unexpected non‑JSON response from server.');
+        }
+      } catch (parseErr) {
+        // Turn the low-level json() failure into a clearer message
+        if (!res.ok) {
+          throw new Error('Failed to read server error response. Is the backend running and returning JSON?');
+        }
+        throw new Error('Unexpected server response. Please try again.');
       }
+
+      if (!res.ok) {
+        throw new Error((data && data.error) || 'Request failed');
+      }
+      if (!data || !data.token) {
+        throw new Error('Login succeeded but no token was returned. Please check the backend API.');
+      }
+
       saveAuth({ token: data.token, user: data.user });
       navigate('/');
     } catch (err) {

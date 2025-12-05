@@ -10,16 +10,7 @@
         "phone": "110",
         "email": "harry"
       },
-      "contacts": [
-        {
-          "id": "1177745f-7203-4a9b-a250-399f09b27643",
-          "name": "Self",
-          "relationship": "Self",
-          "phone": "110",
-          "email": "110@gmail.com",
-          "shareLocation": true
-        }
-      ],
+      "contacts": [],
       "safeWords": [],
       "settings": {
         "threeTap": {
@@ -35,9 +26,9 @@
         }
       },
       "lastLocation": {
-        "lat": 37.748736,
-        "lng": -122.4605696,
-        "timestamp": 1764627948834
+        "lat": 37.7567963,
+        "lng": -122.4596915,
+        "timestamp": 1764901490466
       }
     },
     {
@@ -248,6 +239,76 @@
         "callPolice": true
       },
       "timestamp": 1764571611987
+    },
+    {
+      "id": "0239f16d-2259-4e6c-90b6-d20bcbac69cd",
+      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "type": "3-tap",
+      "locationText": "Lat 37.7520, Lng -122.4573",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": false
+      },
+      "timestamp": 1764900522955
+    },
+    {
+      "id": "d1ff6a9a-7c57-4da2-9d6f-91a0e4cbd669",
+      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "type": "3-tap",
+      "locationText": "Lat 37.7520, Lng -122.4573",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": false
+      },
+      "timestamp": 1764900529161
+    },
+    {
+      "id": "4d8e0957-44ad-4ddd-ab31-9118d3dc926d",
+      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "type": "3-tap",
+      "locationText": "Lat 37.7520, Lng -122.4573",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": false
+      },
+      "timestamp": 1764900532727
+    },
+    {
+      "id": "75afdba7-f786-44d3-a8c7-c5d648de1808",
+      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "type": "3-tap",
+      "locationText": "Lat 37.7520, Lng -122.4573",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": false
+      },
+      "timestamp": 1764900543683
+    },
+    {
+      "id": "45b0f948-c7f9-4b68-9334-9e9f82fb1aee",
+      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "type": "3-tap",
+      "locationText": "Lat 37.7520, Lng -122.4573",
+      "actions": {
+        "notifyNearby": true,
+        "notifyEmergencyContact": true,
+        "callPolice": false
+      },
+      "timestamp": 1764900694626
     }
   ],
   "alerts": [
@@ -393,6 +454,61 @@
       "type": "3-tap",
       "timestamp": 1764571611987,
       "status": "delivered"
+    },
+    {
+      "id": "a138394f-aa72-410f-bb7f-15ff2153b6c7",
+      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
+      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "distanceMiles": 0.3652151107745158,
+      "type": "3-tap",
+      "timestamp": 1764900522955,
+      "status": "new"
+    },
+    {
+      "id": "cde59f10-5ea7-494e-97a8-1b529f7b269b",
+      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
+      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "distanceMiles": 0.3652151107745158,
+      "type": "3-tap",
+      "timestamp": 1764900529161,
+      "status": "new"
+    },
+    {
+      "id": "df8a48a3-26d2-43a4-a0c6-ac94300a06df",
+      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
+      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "distanceMiles": 0.3652151107745158,
+      "type": "3-tap",
+      "timestamp": 1764900532727,
+      "status": "new"
+    },
+    {
+      "id": "d0e3089c-4787-4dca-b891-4212394c65dc",
+      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
+      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "distanceMiles": 0.3652151107745158,
+      "type": "3-tap",
+      "timestamp": 1764900543683,
+      "status": "new"
+    },
+    {
+      "id": "6939a37e-3f9d-4f1d-b23c-53d5fb189e6f",
+      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
+      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
+      "lat": 37.7520128,
+      "lng": -122.4572928,
+      "distanceMiles": 0.3652151107745158,
+      "type": "3-tap",
+      "timestamp": 1764900694626,
+      "status": "new"
     }
   ]
 }

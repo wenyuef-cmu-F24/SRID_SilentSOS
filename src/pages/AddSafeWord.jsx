@@ -147,7 +147,7 @@ function AddSafeWord() {
       {/* Save Button */}
       <button
         onClick={handleSave}
-        className="w-full bg-white rounded-3xl shadow-md py-4 text-gray-400 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
+        className="w-full bg-white rounded-3xl shadow-md py-4 text-gray-700 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
       >
         Save
       </button>
