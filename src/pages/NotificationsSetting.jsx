@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function NotificationsSetting() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [settings, setSettings] = useState({
     nearbyAlerts: true,
     detailedPrompt: false,
@@ -17,9 +14,7 @@ function NotificationsSetting() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/settings')
         if (!res.ok) return
         const data = await res.json()
         const noti = data.notifications || {}
@@ -30,40 +25,41 @@ function NotificationsSetting() {
           vibration: noti.vibration ?? true,
         })
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) load()
-  }, [token])
+    load()
+  }, [])
 
-  const handleToggle = (field) => {
+  const handleToggle = async (field) => {
     const newSettings = {
       ...settings,
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    const save = async () => {
-      try {
-        await fetch(`${API_BASE}/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ notifications: newSettings }),
-        })
-      } catch {
-        // ignore
-      }
+    try {
+      await api.put('/settings', { notifications: newSettings })
+    } catch {
+      // ignore - api.js handles 401
     }
-    save()
   }
 
   const notificationOptions = [
-    { id: 'nearbyAlerts', label: 'Receive nearby emergency alerts' },
-    { id: 'detailedPrompt', label: 'Detailed information prompt' },
-    { id: 'sound', label: 'Sound' },
-    { id: 'vibration', label: 'Vibration' },
+    { 
+      id: 'nearbyAlerts', 
+      label: 'Receive nearby emergency alerts',
+      description: 'Get notified when someone nearby triggers an SOS'
+    },
+    { 
+      id: 'sound', 
+      label: 'Sound',
+      description: 'Play alert sounds for emergency notifications'
+    },
+    { 
+      id: 'vibration', 
+      label: 'Vibration',
+      description: 'Vibrate device when receiving emergency alerts'
+    },
   ]
 
   return (
@@ -86,16 +82,20 @@ function NotificationsSetting() {
         {notificationOptions.map((option, index) => (
           <div
             key={option.id}
-            className={`px-6 py-5 flex items-center justify-between ${
+            className={`px-6 py-5 flex items-center justify-between gap-4 ${
               index !== notificationOptions.length - 1 ? 'border-b border-gray-100' : ''
             }`}
           >
-            <span className="text-lg font-medium text-gray-900">{option.label}</span>
+            <div className="flex-1">
+              <div className="text-lg font-medium text-gray-900 mb-1">{option.label}</div>
+              <p className="text-sm text-gray-500 leading-relaxed">{option.description}</p>
+            </div>
             <button
               onClick={() => handleToggle(option.id)}
-              className={`relative w-14 h-8 rounded-full transition-colors ${
+              className={`relative w-14 h-8 rounded-full transition-colors flex-shrink-0 ${
                 settings[option.id] ? 'bg-green-500' : 'bg-gray-300'
               }`}
+              aria-label={`Toggle ${option.label}`}
             >
               <div
                 className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
@@ -111,4 +111,3 @@ function NotificationsSetting() {
 }
 
 export default NotificationsSetting
-

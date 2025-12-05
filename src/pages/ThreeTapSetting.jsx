@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function ThreeTapSetting() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [settings, setSettings] = useState({
     notifyEmergencyContact: true,
     notifyNearby: true,
@@ -16,9 +13,7 @@ function ThreeTapSetting() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/settings')
         if (!res.ok) return
         const data = await res.json()
         const threeTap = data.threeTap || {}
@@ -28,33 +23,23 @@ function ThreeTapSetting() {
           callPolice: threeTap.callPolice ?? true,
         })
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) load()
-  }, [token])
+    load()
+  }, [])
 
-  const handleToggle = (field) => {
+  const handleToggle = async (field) => {
     const newSettings = {
       ...settings,
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    const save = async () => {
-      try {
-        await fetch(`${API_BASE}/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ threeTap: newSettings }),
-        })
-      } catch {
-        // ignore
-      }
+    try {
+      await api.put('/settings', { threeTap: newSettings })
+    } catch {
+      // ignore - api.js handles 401
     }
-    save()
   }
 
   const options = [
@@ -65,15 +50,6 @@ function ThreeTapSetting() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -118,4 +94,3 @@ function ThreeTapSetting() {
 }
 
 export default ThreeTapSetting
-

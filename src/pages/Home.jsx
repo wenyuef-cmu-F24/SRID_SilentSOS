@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 const THREE_TAP_KEY = 'home_threeTapMode'
 const SAFE_WORD_KEY = 'home_safeWordMode'
 
 function Home() {
-  const { token } = useAuth()
+  const navigate = useNavigate()
   const [tapCount, setTapCount] = useState(0)
   const [isListening, setIsListening] = useState(false)
   const [threeTapMode, setThreeTapMode] = useState(false)
@@ -15,13 +15,26 @@ function Home() {
   const [currentLocation, setCurrentLocation] = useState('Detecting location…')
   const [coords, setCoords] = useState(null)
   const [nearbyAlert, setNearbyAlert] = useState(null)
-  const [sosStatus, setSosStatus] = useState(null) // { type: 'success' | 'error', message: string }
+  const [sosStatus, setSosStatus] = useState(null)
   const [showSosModal, setShowSosModal] = useState(false)
   const [showNearbyModal, setShowNearbyModal] = useState(false)
-  const [hasSafeWord, setHasSafeWord] = useState(null) // null = unknown, true/false once loaded
+  const [safeWords, setSafeWords] = useState([])
+  const [transcript, setTranscript] = useState('')
   const [hasContacts, setHasContacts] = useState(null) // null = unknown, true/false once loaded
-  const [pendingSosType, setPendingSosType] = useState(null) // '3-tap' | 'safe-word' | null
-  const [showConfirmSosModal, setShowConfirmSosModal] = useState(false)
+  
+  const recognitionRef = useRef(null)
+  const isListeningRef = useRef(false)
+  const safeWordsRef = useRef([])
+  const triggerSOSRef = useRef(null)
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isListeningRef.current = isListening
+  }, [isListening])
+
+  useEffect(() => {
+    safeWordsRef.current = safeWords
+  }, [safeWords])
 
   // Restore 3-tap and safe word toggles when returning to Home
   useEffect(() => {
@@ -35,29 +48,134 @@ function Home() {
     }
   }, [])
 
+  // Load safe words from backend API
+  useEffect(() => {
+    const loadSafeWords = async () => {
+      try {
+        const res = await api.get('/safe-words')
+        if (!res.ok) return
+        const data = await res.json()
+        console.log('Loaded safe words from API:', data)
+        setSafeWords(data)
+      } catch (error) {
+        console.log('Failed to load safe words:', error)
+      }
+    }
+    
+    loadSafeWords()
+  }, [])
+
+  // Check if user has at least one emergency contact configured
+  useEffect(() => {
+    const loadContacts = async () => {
+      try {
+        const res = await api.get('/contacts')
+        if (!res.ok) return
+        const data = await res.json()
+        setHasContacts(Array.isArray(data) && data.length > 0)
+      } catch {
+        // ignore – SOS can still be sent
+      }
+    }
+
+    loadContacts()
+  }, [])
+
+  // Reverse geocoding - convert coordinates to address
+  const getAddressFromCoords = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+          }
+        }
+      )
+      const data = await response.json()
+      
+      if (data && data.address) {
+        const addr = data.address
+        // Build a readable address
+        const parts = []
+        
+        // Street address
+        if (addr.house_number && addr.road) {
+          parts.push(`${addr.house_number} ${addr.road}`)
+        } else if (addr.road) {
+          parts.push(addr.road)
+        } else if (addr.building || addr.amenity) {
+          parts.push(addr.building || addr.amenity)
+        }
+        
+        // City/Town
+        const city = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood
+        if (city) {
+          parts.push(city)
+        }
+        
+        // State/Region (abbreviated if possible)
+        if (addr.state) {
+          // Common US state abbreviations
+          const stateAbbr = {
+            'California': 'CA', 'New York': 'NY', 'Texas': 'TX', 'Florida': 'FL',
+            'Pennsylvania': 'PA', 'Illinois': 'IL', 'Ohio': 'OH', 'Georgia': 'GA',
+            'North Carolina': 'NC', 'Michigan': 'MI', 'New Jersey': 'NJ', 'Virginia': 'VA',
+            'Washington': 'WA', 'Arizona': 'AZ', 'Massachusetts': 'MA', 'Tennessee': 'TN',
+            'Indiana': 'IN', 'Missouri': 'MO', 'Maryland': 'MD', 'Wisconsin': 'WI',
+            'Colorado': 'CO', 'Minnesota': 'MN', 'South Carolina': 'SC', 'Alabama': 'AL',
+            'Louisiana': 'LA', 'Kentucky': 'KY', 'Oregon': 'OR', 'Oklahoma': 'OK',
+            'Connecticut': 'CT', 'Utah': 'UT', 'Iowa': 'IA', 'Nevada': 'NV',
+            'Arkansas': 'AR', 'Mississippi': 'MS', 'Kansas': 'KS', 'New Mexico': 'NM',
+            'Nebraska': 'NE', 'Idaho': 'ID', 'West Virginia': 'WV', 'Hawaii': 'HI',
+            'New Hampshire': 'NH', 'Maine': 'ME', 'Montana': 'MT', 'Rhode Island': 'RI',
+            'Delaware': 'DE', 'South Dakota': 'SD', 'North Dakota': 'ND', 'Alaska': 'AK',
+            'Vermont': 'VT', 'Wyoming': 'WY', 'District of Columbia': 'DC'
+          }
+          parts.push(stateAbbr[addr.state] || addr.state)
+        }
+        
+        if (parts.length > 0) {
+          return parts.join(', ')
+        }
+        
+        // Fallback to display_name if we couldn't parse
+        return data.display_name.split(',').slice(0, 3).join(',')
+      }
+      
+      return null
+    } catch (error) {
+      console.log('Geocoding error:', error)
+      return null
+    }
+  }
+
   // Helper to get current location and send to backend
   const fetchAndSendLocation = () => {
-    if (!token) return
-
     if (!navigator.geolocation) {
       setCurrentLocation('Location not available')
       return
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords
         setCoords({ lat: latitude, lng: longitude })
-        setCurrentLocation(`Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`)
+        
+        // First show coordinates while fetching address
+        setCurrentLocation('Getting address...')
+        
+        // Try to get readable address
+        const address = await getAddressFromCoords(latitude, longitude)
+        if (address) {
+          setCurrentLocation(address)
+        } else {
+          // Fallback to coordinates if geocoding fails
+          setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
+        }
 
-        fetch(`${API_BASE}/location`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ lat: latitude, lng: longitude }),
-        }).catch(() => {})
+        // Send location to backend
+        api.post('/location', { lat: latitude, lng: longitude }).catch(() => {})
       },
       () => {
         setCurrentLocation('Location permission denied')
@@ -65,87 +183,14 @@ function Home() {
     )
   }
 
-  // Get current location once on load
+  // Get current location once and send to backend
   useEffect(() => {
-    if (!token) return
     fetchAndSendLocation()
-  }, [token])
+  }, [])
 
-  // Check if the user has at least one safe word configured
-  useEffect(() => {
-    if (!token) return
-
-    const loadSafeWords = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/safe-words`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        setHasSafeWord(Array.isArray(data) && data.length > 0)
-      } catch {
-        // ignore network / parse errors – feature will just behave as before
-      }
-    }
-
-    loadSafeWords()
-  }, [token])
-
-  // Check if the user has at least one emergency contact configured
-  useEffect(() => {
-    if (!token) return
-
-    const loadContacts = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/contacts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        setHasContacts(Array.isArray(data) && data.length > 0)
-      } catch {
-        // ignore network / parse errors – SOS can still be sent
-      }
-    }
-
-    loadContacts()
-  }, [token])
-
-  useEffect(() => {
-    if (tapCount === 3 && threeTapMode) {
-      requestSosConfirmation('3-tap')
-      setTapCount(0)
-    }
-    
-    // Reset tap count after 2 seconds
-    if (tapCount > 0) {
-      const timer = setTimeout(() => setTapCount(0), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [tapCount, threeTapMode])
-
-  const handleSOSTap = () => {
-    if (threeTapMode) {
-      setTapCount(prev => prev + 1)
-    } else {
-      requestSosConfirmation('3-tap')
-    }
-  }
-
-  const requestSosConfirmation = (type) => {
-    // If location is not ready, keep existing error behavior
-    if (!coords) {
-      setSosStatus({
-        type: 'error',
-        message: 'Location not available yet. Please enable location services.',
-      })
-      return
-    }
-    setPendingSosType(type || '3-tap')
-    setShowConfirmSosModal(true)
-  }
-
-  const triggerSOS = async (type) => {
+  // Define triggerSOS first and store in ref
+  const triggerSOS = useCallback(async (type, safeWord = null) => {
+    // Warn user if no emergency contacts are set
     if (hasContacts === false) {
       const proceed = window.confirm(
         'You have not set any emergency contacts yet. SOS will be sent without notifying personal contacts. Do you want to continue?'
@@ -155,70 +200,240 @@ function Home() {
       }
     }
 
-    if (!coords) {
-      setSosStatus({
-        type: 'error',
-        message: 'Location not available yet. Please enable location services.',
-      })
-      return
+    console.log('🚨 triggerSOS called:', type, safeWord)
+    
+    // Stop listening when SOS is triggered
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {
+        console.log('Stop recognition error:', e)
+      }
+    }
+    setIsListening(false)
+
+    // Save alert to history
+    const alertHistory = JSON.parse(localStorage.getItem('alertHistory') || '[]')
+    alertHistory.push({
+      id: Date.now(),
+      type: type,
+      safeWord: safeWord?.word || null,
+      location: currentLocation,
+      timestamp: new Date().toISOString(),
+    })
+    localStorage.setItem('alertHistory', JSON.stringify(alertHistory))
+
+    // Get settings based on trigger type
+    let settings = {}
+    if (type === '3-tap' || type === 'direct') {
+      const threeTapSettings = JSON.parse(localStorage.getItem('threeTapSettings') || '{}')
+      settings = {
+        notifyEmergencyContact: threeTapSettings.notifyEmergencyContact ?? true,
+        notifyNearby: threeTapSettings.notifyNearby ?? true,
+        callPolice: threeTapSettings.callPolice ?? true,
+      }
+    } else if (type === 'safe-word' && safeWord) {
+      settings = {
+        notifyEmergencyContact: safeWord.notifyEmergencyContact ?? true,
+        notifyNearby: safeWord.notifyNearby ?? true,
+        callPolice: safeWord.callPolice ?? true,
+      }
     }
 
-    try {
-      await fetch(`${API_BASE}/sos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+    // Also send to backend
+    if (coords) {
+      try {
+        await api.post('/sos', {
           lat: coords.lat,
           lng: coords.lng,
           type,
           locationText: currentLocation,
-        }),
-      })
-      setSosStatus({
-        type: 'success',
-        message: 'SOS sent with your current location. Help will be notified based on your settings.',
-      })
-      setShowSosModal(true)
-    } catch {
-      setSosStatus({
-        type: 'error',
-        message: 'Failed to send SOS. Please try again.',
-      })
-      setShowSosModal(true)
-    } finally {
+        })
+      } catch (e) {
+        console.log('Backend SOS notification failed:', e)
+      }
+    }
+
+    // Navigate to EmergencyAlert page
+    navigate('/emergency-alert', {
+      state: {
+        triggerType: type === 'direct' ? '3-tap' : type,
+        safeWord: safeWord,
+        settings: settings,
+      }
+    })
+  }, [coords, currentLocation, navigate, hasContacts])
+
+  // Keep triggerSOS ref updated
+  useEffect(() => {
+    triggerSOSRef.current = triggerSOS
+  }, [triggerSOS])
+
+  // Initialize Speech Recognition - only once
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    
+    if (!SpeechRecognition) {
+      console.log('Speech Recognition not supported')
+      return
+    }
+
+    console.log('Initializing Speech Recognition...')
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    
+    recognition.onstart = () => {
+      console.log('🎤 Speech recognition started')
+    }
+    
+    recognition.onresult = (event) => {
+      let finalTranscript = ''
+      let interimTranscript = ''
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript
+        if (event.results[i].isFinal) {
+          finalTranscript += text
+        } else {
+          interimTranscript += text
+        }
+      }
+      
+      const fullTranscript = (finalTranscript || interimTranscript).toLowerCase().trim()
+      console.log('🗣️ Heard:', fullTranscript)
+      setTranscript(fullTranscript)
+      
+      // Check if any safe word was spoken - use ref for latest value
+      const currentSafeWords = safeWordsRef.current
+      // Check both 'activate' (from backend) and 'enabled' fields
+      const activeSafeWords = currentSafeWords.filter(sw => sw.activate !== false && sw.enabled !== false)
+      
+      console.log('Checking against safe words:', activeSafeWords.map(sw => sw.word))
+      
+      for (const sw of activeSafeWords) {
+        if (fullTranscript.includes(sw.word.toLowerCase())) {
+          console.log('✅ Safe word detected:', sw.word)
+          // Use ref to get latest triggerSOS function
+          if (triggerSOSRef.current) {
+            triggerSOSRef.current('safe-word', sw)
+          }
+          break
+        }
+      }
+    }
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      if (event.error === 'not-allowed') {
+        setSosStatus({
+          type: 'error',
+          message: 'Microphone access denied. Please enable microphone permissions.'
+        })
+        setIsListening(false)
+      } else if (event.error === 'no-speech') {
+        console.log('No speech detected, continuing...')
+      } else if (event.error === 'aborted') {
+        console.log('Recognition aborted')
+      }
+    }
+    
+    recognition.onend = () => {
+      console.log('Speech recognition ended, isListening:', isListeningRef.current)
+      // Restart if still in listening mode - use ref for latest value
+      if (isListeningRef.current) {
+        console.log('Restarting recognition...')
+        setTimeout(() => {
+          try {
+            recognition.start()
+          } catch (e) {
+            console.log('Recognition restart failed:', e)
+          }
+        }, 100)
+      }
+    }
+    
+    recognitionRef.current = recognition
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, []) // Empty dependency - only initialize once
+
+  useEffect(() => {
+    if (tapCount === 3 && threeTapMode) {
+      triggerSOS('3-tap')
       setTapCount(0)
+    }
+    
+    if (tapCount > 0) {
+      const timer = setTimeout(() => setTapCount(0), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [tapCount, threeTapMode, triggerSOS])
+
+  const handleSOSTap = () => {
+    if (threeTapMode) {
+      setTapCount(prev => prev + 1)
+    } else {
+      triggerSOS('direct')
     }
   }
 
-  // Auto-hide SOS status after a few seconds
-  useEffect(() => {
-    if (!sosStatus) return
-    const t = setTimeout(() => setSosStatus(null), 5000)
-    return () => clearTimeout(t)
-  }, [sosStatus])
-
   const toggleListening = () => {
     if (!safeWordMode) {
-      alert('Please enable Safe Word mode in settings first')
+      setSosStatus({
+        type: 'error',
+        message: 'Please enable Safe Word mode first'
+      })
       return
     }
-    if (hasSafeWord === false) {
-      alert('You have not set up any Safe Words yet. Please add a Safe Word in Settings before using voice activation.')
+    
+    if (!recognitionRef.current) {
+      setSosStatus({
+        type: 'error',
+        message: 'Voice recognition not supported in this browser. Try Chrome or Edge.'
+      })
       return
     }
-    setIsListening(!isListening)
-    if (!isListening) {
-      // Simulating voice listening
-      setTimeout(() => {
-        const randomWords = ['help me', 'emergency', 'assistance']
-        const heardWord = randomWords[Math.floor(Math.random() * randomWords.length)]
-        console.log(`Listening for safe word... (heard: "${heardWord}")`)
-        // Demo: trigger SOS when we "hear" something
-        requestSosConfirmation('safe-word')
-      }, 1000)
+
+    // Check if we have safe words
+    if (safeWords.length === 0) {
+      setSosStatus({
+        type: 'error',
+        message: 'Please add safe words in Settings first'
+      })
+      return
+    }
+    
+    if (isListening) {
+      console.log('Stopping listening...')
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {
+        console.log('Stop error:', e)
+      }
+      setIsListening(false)
+      setTranscript('')
+    } else {
+      console.log('Starting listening...')
+      try {
+        recognitionRef.current.start()
+        setIsListening(true)
+      } catch (e) {
+        console.error('Failed to start recognition:', e)
+        setSosStatus({
+          type: 'error',
+          message: 'Failed to start voice recognition. Please try again.'
+        })
+      }
     }
   }
 
@@ -234,51 +449,52 @@ function Home() {
     setSafeWordMode(prev => {
       const next = !prev
       localStorage.setItem(SAFE_WORD_KEY, String(next))
+      if (!next && recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // ignore
+        }
+        setIsListening(false)
+      }
       return next
     })
   }
 
   const handleRefreshLocation = () => {
-    // Let users retry location or re-open the browser permission prompt
+    // Allow user to retry location or re-open browser permission dialog
     fetchAndSendLocation()
   }
 
   // Poll backend for nearby alerts
   useEffect(() => {
-    if (!token) return
-
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/alerts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/alerts')
         if (!res.ok) return
         const data = await res.json()
         if (Array.isArray(data) && data.length > 0) {
-          // Show the most recent alert
           const latest = data[data.length - 1]
           setNearbyAlert(latest)
           setShowNearbyModal(true)
         }
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [token])
+  }, [])
+
+  // Auto-hide SOS status after a few seconds
+  useEffect(() => {
+    if (!sosStatus) return
+    const t = setTimeout(() => setSosStatus(null), 5000)
+    return () => clearTimeout(t)
+  }, [sosStatus])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-4 pb-24 flex flex-col justify-start">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-4 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Top alerts: SOS status + Nearby alert banner */}
       {sosStatus && (
@@ -356,35 +572,90 @@ function Home() {
             </p>
           </div>
           <div className="flex-shrink-0 w-32 h-32 mt-2">
-            <svg viewBox="0 0 200 200" className="w-full h-full">
-              {/* Illustration of two people hugging */}
-              <ellipse cx="100" cy="140" rx="60" ry="50" fill="#C8E6A0" opacity="0.6"/>
-              <circle cx="85" cy="80" r="25" fill="#B4A5D6"/>
-              <path d="M 85 105 Q 70 120 75 145" stroke="#A5C8FF" strokeWidth="20" fill="none" strokeLinecap="round"/>
-              <circle cx="115" cy="75" r="22" fill="#3B3561"/>
-              <path d="M 115 97 Q 130 115 125 140" stroke="#3B3561" strokeWidth="18" fill="none" strokeLinecap="round"/>
-            </svg>
+            <img 
+              src="/logo.png" 
+              alt="SilentSOS" 
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </div>
 
       {/* SOS Button */}
       <div className="bg-gray-100 rounded-3xl p-6 mb-6 flex flex-col items-center flex-shrink-0">
-        <button 
-          onClick={handleSOSTap}
-          className="relative w-48 h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-red-400 to-red-500 shadow-2xl flex items-center justify-center transform transition-transform active:scale-95 group"
-          style={{
-            boxShadow: '0 20px 60px rgba(255, 123, 123, 0.3), inset 0 -5px 20px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-red-300 to-red-400 opacity-60"></div>
-          <div className="relative z-10 text-center">
-            <div className="text-white text-5xl font-bold tracking-wider mb-2">SOS</div>
-            <div className="text-white text-sm opacity-90">
-              {threeTapMode && tapCount > 0 ? `${tapCount}/3` : 'Listening ...'}
+        {/* Decorative background circles - positioned relative to SOS button */}
+        <div className="relative flex items-center justify-center">
+          {isListening && (
+            <>
+              <div className="absolute w-64 h-64 rounded-full border-2 border-dashed border-orange-300/30 animate-pulse"></div>
+              <div className="absolute w-72 h-72 rounded-full border border-dashed border-orange-200/20 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            </>
+          )}
+          
+          {/* Pulsing rings when listening */}
+          {isListening && (
+            <>
+              <div className="absolute w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-red-400/40 animate-ping"></div>
+              <div className="absolute w-52 h-52 md:w-60 md:h-60 rounded-full border-2 border-red-300/30 animate-ping" style={{ animationDelay: '0.3s' }}></div>
+            </>
+          )}
+          
+          <button 
+            onClick={handleSOSTap}
+            className="relative w-48 h-48 md:w-56 md:h-56 rounded-full flex items-center justify-center transform transition-transform active:scale-95 group z-10"
+            style={{
+              background: 'linear-gradient(145deg, #ff6b6b, #ee5a5a)',
+              boxShadow: isListening
+                ? '0 0 60px rgba(255, 107, 107, 0.5), 0 20px 60px rgba(255, 123, 123, 0.3), inset 0 -5px 20px rgba(0, 0, 0, 0.1)'
+                : '0 20px 60px rgba(255, 123, 123, 0.3), inset 0 -5px 20px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            {/* Inner highlight */}
+            <div className="absolute inset-4 rounded-full bg-gradient-to-br from-white/20 to-transparent"></div>
+            
+            <div className="relative z-10 text-center">
+              <div className="text-white text-5xl font-bold tracking-wider mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>SOS</div>
+              <div className="text-white text-sm opacity-90">
+                {threeTapMode && tapCount > 0 ? `${tapCount}/3` : (isListening ? 'Listening...' : 'Tap to Alert')}
+              </div>
+            </div>
+          </button>
+        </div>
+        
+        {/* Voice Recognition Status - glassmorphism style */}
+        {safeWordMode && (
+          <div className={`mt-6 px-6 py-3 rounded-2xl backdrop-blur-md border transition-all duration-300 ${
+            isListening 
+              ? 'bg-green-500/10 border-green-300/50 shadow-lg shadow-green-200/30' 
+              : 'bg-white/60 border-gray-200/50'
+          }`}>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleListening}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  isListening 
+                    ? 'bg-green-500 text-white animate-pulse shadow-lg shadow-green-300' 
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                🎤
+              </button>
+              <div>
+                <p className={`text-sm font-semibold ${isListening ? 'text-green-700' : 'text-gray-600'}`}>
+                  {isListening ? '🔴 Listening for safe words...' : 'Tap mic to start listening'}
+                </p>
+                {transcript && isListening && (
+                  <p className="text-xs text-gray-500 mt-1 italic max-w-[200px] truncate">"{transcript}"</p>
+                )}
+                {isListening && safeWords.length > 0 && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Safe words: {safeWords.filter(sw => sw.enabled !== false).map(sw => sw.word).join(', ')}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </button>
+        )}
         
         <p className="text-gray-500 text-sm mt-6 text-center">
           Tap 3 times or say your phrase to activate SOS
@@ -433,46 +704,6 @@ function Home() {
       </div>
 
       {/* Full-screen modals for SOS sent / Nearby alert */}
-      {showConfirmSosModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-            <h2 className="font-semibold text-gray-900 mb-2">Confirm SOS</h2>
-            <p className="text-sm text-gray-700 mb-3">
-              We will send an SOS alert with your current location and use your settings to notify contacts and nearby users.
-            </p>
-            <p className="text-xs text-gray-500 mb-4">
-              Current location: {currentLocation}
-            </p>
-            <div className="flex gap-3 mt-1">
-              <button
-                className="flex-1 rounded-xl border border-gray-300 text-gray-700 py-2 text-sm font-semibold"
-                onClick={() => {
-                  setShowConfirmSosModal(false)
-                  setPendingSosType(null)
-                  setTapCount(0)
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="flex-1 rounded-xl bg-red-600 text-white py-2 text-sm font-semibold"
-                onClick={() => {
-                  if (pendingSosType) {
-                    triggerSOS(pendingSosType)
-                  } else {
-                    triggerSOS('3-tap')
-                  }
-                  setShowConfirmSosModal(false)
-                  setPendingSosType(null)
-                }}
-              >
-                Send SOS
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {sosStatus && showSosModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
           <div className="w-80 max-w-sm rounded-2xl bg-white p-5 shadow-xl">
@@ -521,4 +752,5 @@ function Home() {
 }
 
 export default Home
+
 

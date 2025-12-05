@@ -10,7 +10,16 @@
         "phone": "110",
         "email": "harry"
       },
-      "contacts": [],
+      "contacts": [
+        {
+          "id": "1177745f-7203-4a9b-a250-399f09b27643",
+          "name": "Self",
+          "relationship": "Self",
+          "phone": "110",
+          "email": "110@gmail.com",
+          "shareLocation": true
+        }
+      ],
       "safeWords": [],
       "settings": {
         "threeTap": {
@@ -26,9 +35,9 @@
         }
       },
       "lastLocation": {
-        "lat": 37.7567963,
-        "lng": -122.4596915,
-        "timestamp": 1764901490466
+        "lat": 37.748736,
+        "lng": -122.4605696,
+        "timestamp": 1764627948834
       }
     },
     {
@@ -60,6 +69,135 @@
         "lat": 37.7568304861057,
         "lng": -122.46004331548772,
         "timestamp": 1764571611987
+      }
+    },
+    {
+      "id": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "email": "1234",
+      "salt": "c073eb94f7abcff5fa393077125b0618",
+      "passwordHash": "37046f4f651c43331b1ec80a7079d0de3ee07b31e7c3edb288cb9856283316d592475e8773d3c369555541da9befa05518ba24b024371e6e59e2fd7568d60379",
+      "profile": {
+        "name": "1234",
+        "phone": "",
+        "email": "1234"
+      },
+      "contacts": [
+        {
+          "id": "a8426273-5098-4521-8fc1-49a7de05a44c",
+          "name": "Wenyue Fan",
+          "relationship": "",
+          "phone": "7179035777",
+          "email": "wenyuef@andrew.cmu.edu",
+          "shareLocation": false
+        }
+      ],
+      "safeWords": [],
+      "settings": {
+        "threeTap": {
+          "notifyEmergencyContact": true,
+          "notifyNearby": true,
+          "callPolice": true
+        },
+        "notifications": {
+          "nearbyAlerts": true,
+          "detailedPrompt": false,
+          "sound": false,
+          "vibration": true
+        }
+      },
+      "lastLocation": {
+        "lat": 37.41037423310476,
+        "lng": -122.05968965891718,
+        "timestamp": 1764903244961
+      }
+    },
+    {
+      "id": "3f082296-6694-4519-8e40-834315841bf2",
+      "email": "123456",
+      "salt": "1ef558ec2dcbfb64695c184c867cf64e",
+      "passwordHash": "ada9abf262d40c0b22d2a256991f4bd0f6e2e2c4d18ca19e625851d1ee4093507f9cc6b23aafa24f58735f81fd0038d369c90efc90ae17c2a9c12f7117bdd17d",
+      "profile": {
+        "name": "123456",
+        "phone": "",
+        "email": "123456"
+      },
+      "contacts": [
+        {
+          "id": "dad420f5-5909-4e59-a550-97ff63d7c88a",
+          "name": "Mom",
+          "relationship": "Mom",
+          "phone": "7179035777",
+          "email": "wenyuefan37@gmail.com",
+          "shareLocation": true
+        }
+      ],
+      "safeWords": [],
+      "settings": {
+        "threeTap": {
+          "notifyEmergencyContact": true,
+          "notifyNearby": true,
+          "callPolice": true
+        },
+        "notifications": {
+          "nearbyAlerts": true,
+          "detailedPrompt": false,
+          "sound": false,
+          "vibration": true
+        }
+      },
+      "lastLocation": {
+        "lat": 37.415501593762066,
+        "lng": -122.06972600835061,
+        "timestamp": 1764789641516
+      }
+    },
+    {
+      "id": "69aa651d-0345-4bc2-a855-f90cd6ccd520",
+      "email": "12345678",
+      "salt": "7ac351ef77456710ac210831b2ec345d",
+      "passwordHash": "90ff942b15b8d2b105c89d02131cfd15ef6214cc4cfb9cf6e6d3366cfd5852ee194d5c946c2236bd7ee7340f241d02e06dd62a638dd1db287034ac11a905729c",
+      "profile": {
+        "name": "12345678",
+        "phone": "",
+        "email": "12345678"
+      },
+      "contacts": [
+        {
+          "id": "d4075ea5-0eb4-4649-9c50-7234175ab534",
+          "name": "Wenyue Fan",
+          "relationship": "Mom",
+          "phone": "7179035777",
+          "email": "wenyuef@andrew.cmu.edu",
+          "shareLocation": true
+        }
+      ],
+      "safeWords": [
+        {
+          "id": "e5c1a9b9-c008-4350-b7af-d9697ba2be10",
+          "word": "Hi",
+          "notifyEmergencyContact": false,
+          "notifyNearby": false,
+          "callPolice": true,
+          "activate": true
+        }
+      ],
+      "settings": {
+        "threeTap": {
+          "notifyEmergencyContact": true,
+          "notifyNearby": true,
+          "callPolice": true
+        },
+        "notifications": {
+          "nearbyAlerts": true,
+          "detailedPrompt": true,
+          "sound": false,
+          "vibration": true
+        }
+      },
+      "lastLocation": {
+        "lat": 37.410343866089306,
+        "lng": -122.05970573216965,
+        "timestamp": 1764904710593
       }
     }
   ],
@@ -241,74 +379,144 @@
       "timestamp": 1764571611987
     },
     {
-      "id": "0239f16d-2259-4e6c-90b6-d20bcbac69cd",
-      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
+      "id": "ee055aeb-74f1-4a95-b0a9-283e57bc0b65",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 39.85877876369085,
+      "lng": -104.67686994416434,
       "type": "3-tap",
-      "locationText": "Lat 37.7520, Lng -122.4573",
+      "locationText": "Lat 39.8588, Lng -104.6769",
       "actions": {
         "notifyNearby": true,
         "notifyEmergencyContact": true,
-        "callPolice": false
+        "callPolice": true
       },
-      "timestamp": 1764900522955
+      "timestamp": 1764730593203
     },
     {
-      "id": "d1ff6a9a-7c57-4da2-9d6f-91a0e4cbd669",
-      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
+      "id": "c20211ff-5409-42fb-8dd3-7e8e8a2a9a48",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 39.85877876369085,
+      "lng": -104.67686994416434,
       "type": "3-tap",
-      "locationText": "Lat 37.7520, Lng -122.4573",
+      "locationText": "Lat 39.8588, Lng -104.6769",
       "actions": {
         "notifyNearby": true,
         "notifyEmergencyContact": true,
-        "callPolice": false
+        "callPolice": true
       },
-      "timestamp": 1764900529161
+      "timestamp": 1764730595159
     },
     {
-      "id": "4d8e0957-44ad-4ddd-ab31-9118d3dc926d",
-      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
+      "id": "2b334a20-97f1-4a60-9b96-b42db9d83615",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85876766905642,
+      "lng": -104.67684443110005,
       "type": "3-tap",
-      "locationText": "Lat 37.7520, Lng -122.4573",
+      "locationText": "Lat 39.8588, Lng -104.6768",
       "actions": {
         "notifyNearby": true,
         "notifyEmergencyContact": true,
-        "callPolice": false
+        "callPolice": true
       },
-      "timestamp": 1764900532727
+      "timestamp": 1764731079059
     },
     {
-      "id": "75afdba7-f786-44d3-a8c7-c5d648de1808",
-      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
+      "id": "6f68ec35-a368-46e3-a4b7-55265f1d3fd4",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85877676616193,
+      "lng": -104.67688545775023,
       "type": "3-tap",
-      "locationText": "Lat 37.7520, Lng -122.4573",
+      "locationText": "Lat 39.8588, Lng -104.6769",
       "actions": {
         "notifyNearby": true,
         "notifyEmergencyContact": true,
-        "callPolice": false
+        "callPolice": true
       },
-      "timestamp": 1764900543683
+      "timestamp": 1764731276328
     },
     {
-      "id": "45b0f948-c7f9-4b68-9334-9e9f82fb1aee",
-      "userId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "type": "3-tap",
-      "locationText": "Lat 37.7520, Lng -122.4573",
+      "id": "3a083840-d07d-4dc6-afa1-42b9f2c1736a",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85877588374689,
+      "lng": -104.67688612850851,
+      "type": "safe-word",
+      "locationText": "Lat 39.8588, Lng -104.6769",
       "actions": {
-        "notifyNearby": true,
-        "notifyEmergencyContact": true,
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
         "callPolice": false
       },
-      "timestamp": 1764900694626
+      "timestamp": 1764731292735
+    },
+    {
+      "id": "d17abf53-eab7-443e-a88b-ff9d39e6c095",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85877588374689,
+      "lng": -104.67688612850851,
+      "type": "safe-word",
+      "locationText": "Lat 39.8588, Lng -104.6769",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764731292860
+    },
+    {
+      "id": "503a18f8-96c5-401b-bcba-bf99eead68c2",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85878031408782,
+      "lng": -104.67687355671578,
+      "type": "safe-word",
+      "locationText": "8500 North Oak Hill Street, Denver, CO",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764731409565
+    },
+    {
+      "id": "13ed3c52-eb8e-4ae6-a499-2bedc5f79634",
+      "userId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85878031408782,
+      "lng": -104.67687355671578,
+      "type": "safe-word",
+      "locationText": "8500 North Oak Hill Street, Denver, CO",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764731409802
+    },
+    {
+      "id": "edebe159-a9ed-4a46-8c5f-875fcc5d0066",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 37.41038244697109,
+      "lng": -122.05973788955562,
+      "type": "direct",
+      "locationText": "Bayshore Freeway, Mountain View, CA",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764875148167
+    },
+    {
+      "id": "327b2a63-42e9-4da5-8e3a-2616d4f0f9b9",
+      "userId": "69aa651d-0345-4bc2-a855-f90cd6ccd520",
+      "lat": 37.41041352956699,
+      "lng": -122.05973307225747,
+      "type": "direct",
+      "locationText": "Bayshore Freeway, Mountain View, CA",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764902424965
     }
   ],
   "alerts": [
@@ -456,59 +664,26 @@
       "status": "delivered"
     },
     {
-      "id": "a138394f-aa72-410f-bb7f-15ff2153b6c7",
-      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
-      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "distanceMiles": 0.3652151107745158,
+      "id": "aed22413-a40c-41f1-ba0e-9ab26c698bc0",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "fromUserId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85876766905642,
+      "lng": -104.67684443110005,
+      "distanceMiles": 0.0008417421212206337,
       "type": "3-tap",
-      "timestamp": 1764900522955,
-      "status": "new"
+      "timestamp": 1764731079059,
+      "status": "delivered"
     },
     {
-      "id": "cde59f10-5ea7-494e-97a8-1b529f7b269b",
-      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
-      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "distanceMiles": 0.3652151107745158,
+      "id": "21415972-4da2-4571-b4bb-871f3054a4e4",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "fromUserId": "3f082296-6694-4519-8e40-834315841bf2",
+      "lat": 39.85877676616193,
+      "lng": -104.67688545775023,
+      "distanceMiles": 0.0011385935816732454,
       "type": "3-tap",
-      "timestamp": 1764900529161,
-      "status": "new"
-    },
-    {
-      "id": "df8a48a3-26d2-43a4-a0c6-ac94300a06df",
-      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
-      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "distanceMiles": 0.3652151107745158,
-      "type": "3-tap",
-      "timestamp": 1764900532727,
-      "status": "new"
-    },
-    {
-      "id": "d0e3089c-4787-4dca-b891-4212394c65dc",
-      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
-      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "distanceMiles": 0.3652151107745158,
-      "type": "3-tap",
-      "timestamp": 1764900543683,
-      "status": "new"
-    },
-    {
-      "id": "6939a37e-3f9d-4f1d-b23c-53d5fb189e6f",
-      "userId": "f3e01fd2-5b5e-4c89-8ad1-1c072b19df8d",
-      "fromUserId": "d85deac0-f6ff-4ac8-a67a-a1ea221a411b",
-      "lat": 37.7520128,
-      "lng": -122.4572928,
-      "distanceMiles": 0.3652151107745158,
-      "type": "3-tap",
-      "timestamp": 1764900694626,
-      "status": "new"
+      "timestamp": 1764731276328,
+      "status": "delivered"
     }
   ]
 }

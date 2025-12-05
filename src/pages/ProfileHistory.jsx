@@ -1,31 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function ProfileHistory() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [history, setHistory] = useState([])
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const res = await fetch(`${API_BASE}/history`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/history')
         if (!res.ok) return
         const data = await res.json()
         setHistory(data)
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) {
-      loadHistory()
-    }
-  }, [token])
+    loadHistory()
+  }, [])
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp)
@@ -40,15 +33,6 @@ function ProfileHistory() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -104,4 +88,3 @@ function ProfileHistory() {
 }
 
 export default ProfileHistory
-

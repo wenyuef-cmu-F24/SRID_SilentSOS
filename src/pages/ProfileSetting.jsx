@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function ProfileSetting() {
   const navigate = useNavigate()
-  const { clearAuth, token, user } = useAuth()
+  const { clearAuth, user } = useAuth()
   const [profile, setProfile] = useState({
     name: 'Name',
     email: 'Email',
@@ -15,11 +14,7 @@ function ProfileSetting() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${API_BASE}/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const res = await api.get('/profile')
         if (!res.ok) return
         const data = await res.json()
         setProfile({
@@ -27,19 +22,17 @@ function ProfileSetting() {
           email: data.email || user?.email || 'Email',
         })
       } catch {
-        // ignore for now
+        // ignore - api.js handles 401
       }
     }
-    if (token) {
-      fetchProfile()
-    }
-  }, [token, user])
+    fetchProfile()
+  }, [user])
 
   const handleSignOut = () => {
     if (window.confirm('Are you sure you want to sign out?')) {
       clearAuth()
       alert('Signed out successfully!')
-      navigate('/')
+      navigate('/auth')
     }
   }
 
@@ -102,4 +95,3 @@ function ProfileSetting() {
 }
 
 export default ProfileSetting
-

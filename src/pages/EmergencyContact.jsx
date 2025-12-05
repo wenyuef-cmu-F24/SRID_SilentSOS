@@ -1,54 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function EmergencyContact() {
   const navigate = useNavigate()
-  const { token } = useAuth()
   const [contacts, setContacts] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Load contacts from backend when token changes
+  // Load contacts from backend
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/contacts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await api.get('/contacts')
         if (!res.ok) return
         const data = await res.json()
         setContacts(data)
       } catch {
-        // ignore
+        // ignore - api.js handles 401
       }
     }
-    if (token) load()
-  }, [token])
+    load()
+  }, [])
 
   const handleAddContact = () => {
     navigate('/add-contact')
   }
 
-  const handleEditContact = (contact) => {
-    navigate(`/edit-contact/${contact.id}`)
-  }
-
-  const handleDeleteContact = (id) => {
+  const handleDeleteContact = async (id) => {
     if (!window.confirm('Are you sure you want to delete this contact?')) return
-    const remove = async () => {
-      try {
-        await fetch(`${API_BASE}/contacts/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setContacts(prev => prev.filter(contact => contact.id !== id))
-      } catch {
-        alert('Failed to delete contact')
-      }
+    try {
+      await api.delete(`/contacts/${id}`)
+      setContacts(prev => prev.filter(contact => contact.id !== id))
+    } catch {
+      alert('Failed to delete contact')
     }
-    remove()
   }
 
   const filteredContacts = contacts.filter(contact =>
@@ -58,15 +43,6 @@ function EmergencyContact() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -111,9 +87,10 @@ function EmergencyContact() {
               key={contact.id}
               className="bg-purple-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative group"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+              <div className="flex items-center gap-4">
+                {/* Contact Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
                     {contact.name}
                     {contact.relationship && (
                       <span className="text-sm text-gray-500 font-normal ml-2">
@@ -121,50 +98,56 @@ function EmergencyContact() {
                       </span>
                     )}
                   </h3>
+                  <p className="text-gray-600 text-sm truncate">{contact.phone}</p>
+                  {contact.email && (
+                    <p className="text-gray-500 text-xs truncate mt-0.5">{contact.email}</p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => navigate(`/edit-contact/${contact.id}`)}
+                    className="w-11 h-11 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
+                    title="Edit"
+                  >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+
+                  {/* Call Button */}
                   <a
                     href={`tel:${contact.phone}`}
-                    className="flex items-center gap-2 text-blue-500 font-medium text-base hover:text-blue-600 mt-1"
+                    className="w-11 h-11 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
+                    title="Call"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 5a2 2 0 012-2h2.28a1 1 0 01.948.684l1.07 3.21a1 1 0 01-.502 1.21l-1.518.759a11.042 11.042 0 005.017 5.017l.76-1.518a1 1 0 011.21-.502l3.21 1.07A1 1 0 0121 18.72V21a2 2 0 01-2 2h-.25C9.56 23 3 16.44 3 8.25V8a2 2 0 012-2z"
-                      />
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
-                    <span>{contact.phone}</span>
                   </a>
+
+                  {/* Email Button */}
                   {contact.email && (
                     <a
                       href={`mailto:${contact.email}`}
-                      className="flex items-center gap-2 text-gray-600 text-sm hover:text-gray-800 mt-1"
+                      className="w-11 h-11 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all"
+                      title="Email"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 0l8 7 8-7"
-                        />
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      <span>{contact.email}</span>
                     </a>
                   )}
-                </div>
-                <div className="flex flex-col items-end gap-2 ml-3">
-                  <button
-                    onClick={() => handleEditContact(contact)}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
-                  >
-                    Edit
-                  </button>
+
+                  {/* Delete Button */}
                   <button
                     onClick={() => handleDeleteContact(contact.id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="w-11 h-11 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-all active:scale-95"
                     title="Delete contact"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -194,4 +177,3 @@ function EmergencyContact() {
 }
 
 export default EmergencyContact
-

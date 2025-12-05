@@ -1,122 +1,140 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-
-const API_BASE = '/api'
+import api from '../utils/api'
 
 function EditContact() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const { token } = useAuth()
-
-  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     relationship: '',
     phone: '',
     email: '',
-    shareLocation: false,
+    shareLocation: false
   })
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
+  const [loading, setLoading] = useState(true)
 
+  // Load contact data
   useEffect(() => {
     const loadContact = async () => {
       try {
-        const res = await fetch(`${API_BASE}/contacts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) {
-          setLoading(false)
-          return
-        }
-        const list = await res.json()
-        const contact = Array.isArray(list) ? list.find(c => c.id === id) : null
-        if (!contact) {
+        const res = await api.get('/contacts')
+        if (!res.ok) return
+        const data = await res.json()
+        const contact = data.find(c => c.id === id)
+        if (contact) {
+          setFormData({
+            name: contact.name || '',
+            relationship: contact.relationship || '',
+            phone: contact.phone || '',
+            email: contact.email || '',
+            shareLocation: contact.shareLocation || false
+          })
+        } else {
           alert('Contact not found')
           navigate('/emergency-contact')
-          return
         }
-        setFormData({
-          name: contact.name || '',
-          relationship: contact.relationship || '',
-          phone: contact.phone || '',
-          email: contact.email || '',
-          shareLocation: !!contact.shareLocation,
-        })
-      } catch {
-        alert('Failed to load contact')
+      } catch (error) {
+        console.error('Failed to load contact:', error)
       } finally {
         setLoading(false)
       }
     }
+    loadContact()
+  }, [id, navigate])
 
-    if (token && id) {
-      loadContact()
+  // Real-time validation
+  useEffect(() => {
+    const newErrors = {}
+    
+    if (touched.name && !formData.name.trim()) {
+      newErrors.name = 'Name is required'
     }
-  }, [token, id, navigate])
+    
+    if (touched.phone && !formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (touched.phone && formData.phone.trim() && !/^\+?[\d\s\-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number'
+    }
+    
+    if (touched.email && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+    
+    setErrors(newErrors)
+  }, [formData, touched])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
-  const handleSave = () => {
+  const handleBlur = (field) => {
+    setTouched(prev => ({
+      ...prev,
+      [field]: true
+    }))
+  }
+
+  const handleSave = async () => {
+    // Mark all fields as touched
+    setTouched({
+      name: true,
+      phone: true,
+      email: true
+    })
+
+    // Validate all fields
+    const newErrors = {}
+    
     if (!formData.name.trim()) {
-      alert('Please enter a name')
-      return
+      newErrors.name = 'Name is required'
     }
+    
     if (!formData.phone.trim()) {
-      alert('Please enter a phone number')
+      newErrors.phone = 'Phone number is required'
+    } else if (!/^\+?[\d\s\-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number'
+    }
+    
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
 
-    const save = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/contacts/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        })
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          alert(data.error || 'Failed to update contact')
-          return
-        }
-        navigate('/emergency-contact')
-      } catch {
+    try {
+      const res = await api.put(`/contacts/${id}`, formData)
+      if (!res.ok) {
         alert('Failed to update contact')
+        return
       }
+      navigate('/emergency-contact')
+    } catch {
+      alert('Failed to update contact')
     }
-
-    save()
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto flex items-center justify-center">
-        <p className="text-gray-500 text-sm">Loading contact…</p>
+        <div className="text-gray-500">Loading...</div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
-      <button
+      <button 
         onClick={() => navigate('/emergency-contact')}
         className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mb-6 hover:bg-gray-400 active:scale-95 transition-all"
       >
@@ -137,15 +155,37 @@ function EditContact() {
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="w-full border-b-2 border-gray-200 py-2 outline-none focus:border-blue-500 transition-colors text-gray-800"
+            onBlur={() => handleBlur('name')}
+            className={`w-full border-b-2 py-2 outline-none transition-colors text-gray-800 ${
+              errors.name ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+            }`}
             placeholder="Enter name"
           />
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.name}
+            </p>
+          )}
         </div>
 
         {/* Relationship */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="block text-gray-900 font-semibold text-lg">Relationship</label>
+            <button 
+              onClick={() => {
+                const relationship = prompt('Enter relationship:', formData.relationship)
+                if (relationship !== null) {
+                  handleInputChange('relationship', relationship)
+                }
+              }}
+              className="text-blue-500 font-semibold text-base hover:text-blue-600"
+            >
+              Edit
+            </button>
           </div>
           <input
             type="text"
@@ -163,9 +203,20 @@ function EditContact() {
             type="tel"
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
-            className="w-full border-b-2 border-gray-200 py-2 outline-none focus:border-blue-500 transition-colors text-gray-800"
+            onBlur={() => handleBlur('phone')}
+            className={`w-full border-b-2 py-2 outline-none transition-colors text-gray-800 ${
+              errors.phone ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+            }`}
             placeholder="Enter phone number"
           />
+          {errors.phone && (
+            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.phone}
+            </p>
+          )}
         </div>
 
         {/* Email Address */}
@@ -175,9 +226,20 @@ function EditContact() {
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className="w-full border-b-2 border-gray-200 py-2 outline-none focus:border-blue-500 transition-colors text-gray-800"
+            onBlur={() => handleBlur('email')}
+            className={`w-full border-b-2 py-2 outline-none transition-colors text-gray-800 ${
+              errors.email ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+            }`}
             placeholder="Enter email address"
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.email}
+            </p>
+          )}
         </div>
 
         {/* Share Location Toggle */}
@@ -201,7 +263,7 @@ function EditContact() {
       {/* Save Button */}
       <button
         onClick={handleSave}
-        className="w-full bg-white rounded-3xl shadow-md py-4 mt-8 text-gray-700 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
+        className="w-full bg-white rounded-3xl shadow-md py-4 mt-8 text-gray-900 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
       >
         Save Changes
       </button>
@@ -210,5 +272,4 @@ function EditContact() {
 }
 
 export default EditContact
-
 

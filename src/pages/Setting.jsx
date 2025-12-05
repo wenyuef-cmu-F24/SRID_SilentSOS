@@ -13,15 +13,6 @@ function Setting() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Header */}
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Settings</h1>
