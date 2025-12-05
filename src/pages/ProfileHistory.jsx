@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 function ProfileHistory() {
   const navigate = useNavigate()
   const [history, setHistory] = useState([])
 
   useEffect(() => {
-    // Load alert history from localStorage
-    const savedHistory = JSON.parse(localStorage.getItem('alertHistory') || '[]')
-    setHistory(savedHistory)
+    const loadHistory = async () => {
+      try {
+        const res = await api.get('/history')
+        if (!res.ok) return
+        const data = await res.json()
+        setHistory(data)
+      } catch {
+        // ignore - api.js handles 401
+      }
+    }
+    loadHistory()
   }, [])
 
   const formatDate = (timestamp) => {
@@ -24,15 +33,6 @@ function ProfileHistory() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -66,7 +66,9 @@ function ProfileHistory() {
                   <h3 className="font-bold text-gray-900 mb-1">
                     {alert.type === '3-tap' ? '3-Tap Alert' : 'Safe Word Alert'}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-1">{alert.location}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    {alert.locationText || `Lat ${alert.lat?.toFixed?.(4)}, Lng ${alert.lng?.toFixed?.(4)}`}
+                  </p>
                   <p className="text-xs text-gray-400">{formatDate(alert.timestamp)}</p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
@@ -74,7 +76,7 @@ function ProfileHistory() {
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-orange-100 text-orange-700'
                 }`}>
-                  {alert.status}
+                  {alert.status || 'sent'}
                 </span>
               </div>
             </div>
@@ -86,4 +88,3 @@ function ProfileHistory() {
 }
 
 export default ProfileHistory
-

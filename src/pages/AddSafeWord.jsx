@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 function AddSafeWord() {
   const navigate = useNavigate()
@@ -17,42 +18,31 @@ function AddSafeWord() {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.word.trim()) {
       alert('Please enter a safe word')
       return
     }
 
-    // Get existing safe words
-    const existingSafeWords = JSON.parse(localStorage.getItem('safeWords') || '[]')
-    
-    // Create new safe word
-    const newSafeWord = {
-      id: Date.now(),
-      word: formData.word.trim(),
-      notifyEmergencyContact: formData.notifyEmergencyContact,
-      notifyNearby: formData.notifyNearby,
-      callPolice: formData.callPolice,
-      activate: true, // Default to activated
+    try {
+      const res = await api.post('/safe-words', {
+        word: formData.word.trim(),
+        notifyEmergencyContact: formData.notifyEmergencyContact,
+        notifyNearby: formData.notifyNearby,
+        callPolice: formData.callPolice,
+      })
+      if (!res.ok) {
+        alert('Failed to save safe word')
+        return
+      }
+      navigate('/setting/safe-word')
+    } catch {
+      alert('Failed to save safe word')
     }
-    
-    existingSafeWords.push(newSafeWord)
-    localStorage.setItem('safeWords', JSON.stringify(existingSafeWords))
-    
-    navigate('/setting/safe-word')
   }
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -143,4 +133,3 @@ function AddSafeWord() {
 }
 
 export default AddSafeWord
-

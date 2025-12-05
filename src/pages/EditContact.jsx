@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../utils/api'
 
-function AddContact() {
+function EditContact() {
   const navigate = useNavigate()
+  const { id } = useParams()
   const [formData, setFormData] = useState({
     name: '',
     relationship: '',
@@ -13,6 +14,36 @@ function AddContact() {
   })
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  // Load contact data
+  useEffect(() => {
+    const loadContact = async () => {
+      try {
+        const res = await api.get('/contacts')
+        if (!res.ok) return
+        const data = await res.json()
+        const contact = data.find(c => c.id === id)
+        if (contact) {
+          setFormData({
+            name: contact.name || '',
+            relationship: contact.relationship || '',
+            phone: contact.phone || '',
+            email: contact.email || '',
+            shareLocation: contact.shareLocation || false
+          })
+        } else {
+          alert('Contact not found')
+          navigate('/emergency-contact')
+        }
+      } catch (error) {
+        console.error('Failed to load contact:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadContact()
+  }, [id, navigate])
 
   // Real-time validation
   useEffect(() => {
@@ -80,15 +111,23 @@ function AddContact() {
     }
 
     try {
-      const res = await api.post('/contacts', formData)
+      const res = await api.put(`/contacts/${id}`, formData)
       if (!res.ok) {
-        alert('Failed to save contact')
+        alert('Failed to update contact')
         return
       }
       navigate('/emergency-contact')
     } catch {
-      alert('Failed to save contact')
+      alert('Failed to update contact')
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
   }
 
   return (
@@ -105,7 +144,7 @@ function AddContact() {
       </button>
 
       {/* Header */}
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">Add New E Contact</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-8">Edit E Contact</h1>
 
       {/* Form */}
       <div className="bg-white rounded-3xl shadow-sm p-6 space-y-5">
@@ -224,12 +263,13 @@ function AddContact() {
       {/* Save Button */}
       <button
         onClick={handleSave}
-        className="w-full bg-white rounded-3xl shadow-md py-4 mt-8 text-gray-400 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
+        className="w-full bg-white rounded-3xl shadow-md py-4 mt-8 text-gray-900 font-semibold text-lg hover:bg-gray-50 active:scale-98 transition-all"
       >
-        Save
+        Save Changes
       </button>
     </div>
   )
 }
 
-export default AddContact
+export default EditContact
+

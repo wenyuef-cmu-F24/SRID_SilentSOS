@@ -1,41 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 function SafeWordSetting() {
   const navigate = useNavigate()
   const [safeWords, setSafeWords] = useState([])
 
   useEffect(() => {
+    const loadSafeWords = async () => {
+      try {
+        const res = await api.get('/safe-words')
+        if (!res.ok) return
+        const data = await res.json()
+        setSafeWords(data)
+      } catch {
+        // ignore - api.js handles 401
+      }
+    }
     loadSafeWords()
   }, [])
 
-  const loadSafeWords = () => {
-    const saved = JSON.parse(localStorage.getItem('safeWords') || '[]')
-    // Add default if empty
-    if (saved.length === 0) {
-      const defaultWord = {
-        id: 1,
-        word: 'February thirty first',
-        notifyEmergencyContact: true,
-        notifyNearby: true,
-        callPolice: true,
-        activate: true,
-      }
-      saved.push(defaultWord)
-      localStorage.setItem('safeWords', JSON.stringify(saved))
-    }
-    setSafeWords(saved)
-  }
-
-  const handleToggle = (wordId, field) => {
+  const handleToggle = async (wordId, field) => {
     const updated = safeWords.map(word => 
       word.id === wordId ? { ...word, [field]: !word[field] } : word
     )
     setSafeWords(updated)
-    localStorage.setItem('safeWords', JSON.stringify(updated))
+    const target = updated.find(w => w.id === wordId)
+    try {
+      await api.put(`/safe-words/${wordId}`, target)
+    } catch {
+      // ignore - api.js handles 401
+    }
   }
 
-  const handleEdit = (wordId) => {
+  const handleEdit = async (wordId) => {
     const word = safeWords.find(w => w.id === wordId)
     const newWord = prompt('Edit safe word:', word.word)
     if (newWord && newWord.trim()) {
@@ -43,29 +41,27 @@ function SafeWordSetting() {
         w.id === wordId ? { ...w, word: newWord.trim() } : w
       )
       setSafeWords(updated)
-      localStorage.setItem('safeWords', JSON.stringify(updated))
+      const target = updated.find(w => w.id === wordId)
+      try {
+        await api.put(`/safe-words/${wordId}`, target)
+      } catch {
+        // ignore - api.js handles 401
+      }
     }
   }
 
-  const handleDelete = (wordId) => {
-    if (window.confirm('Are you sure you want to delete this safe word?')) {
-      const updated = safeWords.filter(w => w.id !== wordId)
-      setSafeWords(updated)
-      localStorage.setItem('safeWords', JSON.stringify(updated))
+  const handleDelete = async (wordId) => {
+    if (!window.confirm('Are you sure you want to delete this safe word?')) return
+    try {
+      await api.delete(`/safe-words/${wordId}`)
+      setSafeWords(prev => prev.filter(w => w.id !== wordId))
+    } catch {
+      alert('Failed to delete safe word')
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Header with Back and Add buttons */}
       <div className="flex items-center justify-between mb-6">
@@ -193,4 +189,3 @@ function SafeWordSetting() {
 }
 
 export default SafeWordSetting
-

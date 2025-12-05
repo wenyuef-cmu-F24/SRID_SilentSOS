@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 function ProfileEdit() {
   const navigate = useNavigate()
@@ -10,12 +11,21 @@ function ProfileEdit() {
   })
 
   useEffect(() => {
-    const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    setProfile({
-      name: savedProfile.name || '',
-      phone: savedProfile.phone || '',
-      email: savedProfile.email || '',
-    })
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/profile')
+        if (!res.ok) return
+        const data = await res.json()
+        setProfile({
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+        })
+      } catch {
+        // ignore - api.js handles 401
+      }
+    }
+    fetchProfile()
   }, [])
 
   const handleInputChange = (field, value) => {
@@ -25,7 +35,7 @@ function ProfileEdit() {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!profile.name.trim()) {
       alert('Please enter your name')
       return
@@ -35,22 +45,21 @@ function ProfileEdit() {
       return
     }
     
-    localStorage.setItem('userProfile', JSON.stringify(profile))
-    alert('Profile saved successfully!')
-    navigate('/setting/profile')
+    try {
+      const res = await api.put('/profile', profile)
+      if (!res.ok) {
+        alert('Failed to save profile')
+        return
+      }
+      alert('Profile saved successfully!')
+      navigate('/setting/profile')
+    } catch {
+      alert('Failed to save profile')
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -116,4 +125,3 @@ function ProfileEdit() {
 }
 
 export default ProfileEdit
-

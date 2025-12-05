@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import api from '../utils/api'
 
 function ProfileSetting() {
   const navigate = useNavigate()
+  const { clearAuth, user } = useAuth()
   const [profile, setProfile] = useState({
     name: 'Name',
     email: 'Email',
   })
 
   useEffect(() => {
-    const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    setProfile({
-      name: savedProfile.name || 'Name',
-      email: savedProfile.email || 'Email',
-    })
-  }, [])
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/profile')
+        if (!res.ok) return
+        const data = await res.json()
+        setProfile({
+          name: data.name || user?.name || 'Name',
+          email: data.email || user?.email || 'Email',
+        })
+      } catch {
+        // ignore - api.js handles 401
+      }
+    }
+    fetchProfile()
+  }, [user])
 
   const handleSignOut = () => {
     if (window.confirm('Are you sure you want to sign out?')) {
-      localStorage.clear()
+      clearAuth()
       alert('Signed out successfully!')
-      navigate('/')
+      navigate('/auth')
     }
   }
 
@@ -83,4 +95,3 @@ function ProfileSetting() {
 }
 
 export default ProfileSetting
-

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 function ThreeTapSetting() {
   const navigate = useNavigate()
@@ -10,21 +11,35 @@ function ThreeTapSetting() {
   })
 
   useEffect(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('threeTapSettings') || '{}')
-    setSettings({
-      notifyEmergencyContact: savedSettings.notifyEmergencyContact ?? true,
-      notifyNearby: savedSettings.notifyNearby ?? true,
-      callPolice: savedSettings.callPolice ?? true,
-    })
+    const load = async () => {
+      try {
+        const res = await api.get('/settings')
+        if (!res.ok) return
+        const data = await res.json()
+        const threeTap = data.threeTap || {}
+        setSettings({
+          notifyEmergencyContact: threeTap.notifyEmergencyContact ?? true,
+          notifyNearby: threeTap.notifyNearby ?? true,
+          callPolice: threeTap.callPolice ?? true,
+        })
+      } catch {
+        // ignore - api.js handles 401
+      }
+    }
+    load()
   }, [])
 
-  const handleToggle = (field) => {
+  const handleToggle = async (field) => {
     const newSettings = {
       ...settings,
       [field]: !settings[field]
     }
     setSettings(newSettings)
-    localStorage.setItem('threeTapSettings', JSON.stringify(newSettings))
+    try {
+      await api.put('/settings', { threeTap: newSettings })
+    } catch {
+      // ignore - api.js handles 401
+    }
   }
 
   const options = [
@@ -35,15 +50,6 @@ function ThreeTapSetting() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Back Button */}
       <button 
@@ -88,4 +94,3 @@ function ThreeTapSetting() {
 }
 
 export default ThreeTapSetting
-
