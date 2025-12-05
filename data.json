@@ -81,7 +81,16 @@
         "phone": "",
         "email": "1234"
       },
-      "contacts": [],
+      "contacts": [
+        {
+          "id": "a8426273-5098-4521-8fc1-49a7de05a44c",
+          "name": "Wenyue Fan",
+          "relationship": "",
+          "phone": "7179035777",
+          "email": "wenyuef@andrew.cmu.edu",
+          "shareLocation": false
+        }
+      ],
       "safeWords": [],
       "settings": {
         "threeTap": {
@@ -97,9 +106,9 @@
         }
       },
       "lastLocation": {
-        "lat": 37.41061130274016,
-        "lng": -122.05954559253297,
-        "timestamp": 1764802756075
+        "lat": 37.41037423310476,
+        "lng": -122.05968965891718,
+        "timestamp": 1764903244961
       }
     },
     {
@@ -140,6 +149,55 @@
         "lat": 37.415501593762066,
         "lng": -122.06972600835061,
         "timestamp": 1764789641516
+      }
+    },
+    {
+      "id": "69aa651d-0345-4bc2-a855-f90cd6ccd520",
+      "email": "12345678",
+      "salt": "7ac351ef77456710ac210831b2ec345d",
+      "passwordHash": "90ff942b15b8d2b105c89d02131cfd15ef6214cc4cfb9cf6e6d3366cfd5852ee194d5c946c2236bd7ee7340f241d02e06dd62a638dd1db287034ac11a905729c",
+      "profile": {
+        "name": "12345678",
+        "phone": "",
+        "email": "12345678"
+      },
+      "contacts": [
+        {
+          "id": "d4075ea5-0eb4-4649-9c50-7234175ab534",
+          "name": "Wenyue Fan",
+          "relationship": "Mom",
+          "phone": "7179035777",
+          "email": "wenyuef@andrew.cmu.edu",
+          "shareLocation": true
+        }
+      ],
+      "safeWords": [
+        {
+          "id": "e5c1a9b9-c008-4350-b7af-d9697ba2be10",
+          "word": "Hi",
+          "notifyEmergencyContact": false,
+          "notifyNearby": false,
+          "callPolice": true,
+          "activate": true
+        }
+      ],
+      "settings": {
+        "threeTap": {
+          "notifyEmergencyContact": true,
+          "notifyNearby": true,
+          "callPolice": true
+        },
+        "notifications": {
+          "nearbyAlerts": true,
+          "detailedPrompt": true,
+          "sound": false,
+          "vibration": true
+        }
+      },
+      "lastLocation": {
+        "lat": 37.410343866089306,
+        "lng": -122.05970573216965,
+        "timestamp": 1764904710593
       }
     }
   ],
@@ -431,6 +489,34 @@
         "callPolice": false
       },
       "timestamp": 1764731409802
+    },
+    {
+      "id": "edebe159-a9ed-4a46-8c5f-875fcc5d0066",
+      "userId": "697c2c9e-4e7f-49d0-9827-7421bc5483d2",
+      "lat": 37.41038244697109,
+      "lng": -122.05973788955562,
+      "type": "direct",
+      "locationText": "Bayshore Freeway, Mountain View, CA",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764875148167
+    },
+    {
+      "id": "327b2a63-42e9-4da5-8e3a-2616d4f0f9b9",
+      "userId": "69aa651d-0345-4bc2-a855-f90cd6ccd520",
+      "lat": 37.41041352956699,
+      "lng": -122.05973307225747,
+      "type": "direct",
+      "locationText": "Bayshore Freeway, Mountain View, CA",
+      "actions": {
+        "notifyNearby": false,
+        "notifyEmergencyContact": false,
+        "callPolice": false
+      },
+      "timestamp": 1764902424965
     }
   ],
   "alerts": [

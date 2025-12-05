@@ -1,9 +1,10 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import EmergencyContact from './pages/EmergencyContact'
 import AddContact from './pages/AddContact'
+import EditContact from './pages/EditContact'
 import Setting from './pages/Setting'
 import ProfileSetting from './pages/ProfileSetting'
 import ProfileEdit from './pages/ProfileEdit'
@@ -18,6 +19,17 @@ import EmergencyAlert from './pages/EmergencyAlert'
 import AuthPage from './pages/Auth'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  
+  return null
+}
+
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return null
@@ -29,6 +41,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route
@@ -48,6 +61,14 @@ function App() {
             element={(
               <PrivateRoute>
                 <AddContact />
+              </PrivateRoute>
+            )}
+          />
+          <Route
+            path="/edit-contact/:id"
+            element={(
+              <PrivateRoute>
+                <EditContact />
               </PrivateRoute>
             )}
           />

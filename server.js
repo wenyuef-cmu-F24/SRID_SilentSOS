@@ -184,6 +184,31 @@ app.delete('/api/contacts/:id', authMiddleware, (req, res) => {
   res.status(204).end();
 });
 
+app.put('/api/contacts/:id', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  const { name, relationship, phone, email, shareLocation } = req.body;
+  if (!name || !phone) {
+    return res.status(400).json({ error: 'Name and phone are required' });
+  }
+  const data = loadData();
+  const user = data.users.find(u => u.id === req.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const contactIndex = user.contacts.findIndex(c => c.id === id);
+  if (contactIndex === -1) {
+    return res.status(404).json({ error: 'Contact not found' });
+  }
+  user.contacts[contactIndex] = {
+    ...user.contacts[contactIndex],
+    name,
+    relationship: relationship || '',
+    phone,
+    email: email || '',
+    shareLocation: !!shareLocation,
+  };
+  saveData(data);
+  res.json(user.contacts[contactIndex]);
+});
+
 // Safe words
 app.get('/api/safe-words', authMiddleware, (req, res) => {
   const data = loadData();

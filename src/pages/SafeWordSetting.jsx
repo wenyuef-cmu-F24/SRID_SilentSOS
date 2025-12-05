@@ -62,15 +62,6 @@ function SafeWordSetting() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 pt-4 pb-8 max-w-md mx-auto">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-6 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Header with Back and Add buttons */}
       <div className="flex items-center justify-between mb-6">

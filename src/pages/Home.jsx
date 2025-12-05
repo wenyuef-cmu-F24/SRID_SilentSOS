@@ -458,15 +458,6 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-4 pb-24 flex flex-col justify-start">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center mb-4 text-sm">
-        <span className="font-semibold">9:41</span>
-        <div className="flex gap-1">
-          <div className="w-4 h-4">📶</div>
-          <div className="w-4 h-4">📡</div>
-          <div className="w-4 h-4">🔋</div>
-        </div>
-      </div>
 
       {/* Top alerts: SOS status + Nearby alert banner */}
       {sosStatus && (

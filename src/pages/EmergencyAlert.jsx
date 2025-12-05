@@ -129,15 +129,6 @@ function EmergencyAlert() {
 
         {/* Content */}
         <div className="relative z-10 px-6 pt-8 pb-8 min-h-screen flex flex-col">
-          {/* Status Bar */}
-          <div className="flex justify-between items-center mb-12 text-sm">
-            <span className="font-semibold">9:41</span>
-            <div className="flex gap-1">
-              <span>📶</span>
-              <span>📡</span>
-              <span>🔋</span>
-            </div>
-          </div>
 
           {/* Title */}
           <div className="text-center mb-8">
@@ -248,15 +239,6 @@ function EmergencyAlert() {
 
       {/* Content */}
       <div className="relative z-10 px-6 pt-8 pb-8 min-h-screen flex flex-col">
-        {/* Status Bar */}
-        <div className="flex justify-between items-center mb-8 text-sm">
-          <span className="font-semibold">9:41</span>
-          <div className="flex gap-1">
-            <span>📶</span>
-            <span>📡</span>
-            <span>🔋</span>
-          </div>
-        </div>
 
         {/* Title */}
         <div className="text-center mb-8">
