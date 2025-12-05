@@ -223,14 +223,35 @@ function Home() {
     })
     localStorage.setItem('alertHistory', JSON.stringify(alertHistory))
 
-    // Get settings based on trigger type
+    // Get settings based on trigger type from backend API
     let settings = {}
     if (type === '3-tap' || type === 'direct') {
-      const threeTapSettings = JSON.parse(localStorage.getItem('threeTapSettings') || '{}')
-      settings = {
-        notifyEmergencyContact: threeTapSettings.notifyEmergencyContact ?? true,
-        notifyNearby: threeTapSettings.notifyNearby ?? true,
-        callPolice: threeTapSettings.callPolice ?? true,
+      try {
+        const res = await api.get('/settings')
+        if (res.ok) {
+          const data = await res.json()
+          const threeTap = data.threeTap || {}
+          settings = {
+            notifyEmergencyContact: threeTap.notifyEmergencyContact ?? true,
+            notifyNearby: threeTap.notifyNearby ?? true,
+            callPolice: threeTap.callPolice ?? true,
+          }
+          console.log('✅ Loaded 3-Tap settings from API:', settings)
+        } else {
+          // Fallback to defaults
+          settings = {
+            notifyEmergencyContact: true,
+            notifyNearby: true,
+            callPolice: true,
+          }
+        }
+      } catch (error) {
+        console.log('Failed to load settings, using defaults:', error)
+        settings = {
+          notifyEmergencyContact: true,
+          notifyNearby: true,
+          callPolice: true,
+        }
       }
     } else if (type === 'safe-word' && safeWord) {
       settings = {

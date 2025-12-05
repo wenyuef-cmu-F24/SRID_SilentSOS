@@ -306,8 +306,8 @@ function EmergencyAlert() {
             <div className="absolute w-64 h-64 bg-orange-300/15 rounded-full blur-3xl"></div>
           </div>
 
-          {/* Contact avatars around the SOS button */}
-          {contacts.length > 0 && (
+          {/* Contact avatars around the SOS button - only show if notifyEmergencyContact is on */}
+          {settings?.notifyEmergencyContact && contacts.length > 0 && (
             <>
               {/* Contact 1 - Top Left */}
               <div className="absolute top-4 left-6 flex flex-col items-center animate-float" style={{ animationDelay: '0s' }}>
