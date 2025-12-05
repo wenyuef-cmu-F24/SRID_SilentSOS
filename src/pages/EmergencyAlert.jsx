@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import api from '../utils/api'
 
 function EmergencyAlert() {
   const navigate = useNavigate()
@@ -14,11 +15,54 @@ function EmergencyAlert() {
   const [showRadar, setShowRadar] = useState(false)
   const [contacts, setContacts] = useState([])
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [contactDots, setContactDots] = useState([])
+  const [nearbyDots, setNearbyDots] = useState([])
 
-  // Load emergency contacts
+  // Load emergency contacts from backend
   useEffect(() => {
-    const savedContacts = JSON.parse(localStorage.getItem('emergencyContacts') || '[]')
-    setContacts(savedContacts.slice(0, 3)) // Show max 3 contacts
+    const loadContacts = async () => {
+      try {
+        const res = await api.get('/contacts')
+        if (!res.ok) return
+        const data = await res.json()
+        setContacts(data.slice(0, 3)) // Show max 3 contacts with avatars
+        
+        // Generate dots for all contacts (for radar view)
+        const dots = data.slice(0, 5).map((contact, idx) => {
+          const angle = (idx * 360 / Math.min(data.length, 5)) * (Math.PI / 180)
+          const distance = 140 + Math.random() * 40 // 140-180px from center
+          return {
+            id: contact.id,
+            name: contact.name,
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance,
+            delay: idx * 0.2,
+          }
+        })
+        setContactDots(dots)
+      } catch (error) {
+        console.log('Failed to load contacts:', error)
+      }
+    }
+    
+    loadContacts()
+  }, [])
+
+  // Simulate nearby users (in real app, this would come from backend)
+  useEffect(() => {
+    // Generate 2-4 random nearby user dots
+    const nearbyCount = Math.floor(Math.random() * 3) + 2 // 2-4 users
+    const dots = Array.from({ length: nearbyCount }, (_, idx) => {
+      const angle = (Math.random() * 360) * (Math.PI / 180)
+      const distance = 80 + Math.random() * 60 // 80-140px from center
+      return {
+        id: `nearby-${idx}`,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        delay: idx * 0.3,
+      }
+    })
+    setNearbyDots(dots)
   }, [])
 
   // Simulate completing tasks one by one (faster)
@@ -295,6 +339,64 @@ function EmergencyAlert() {
             </>
           )}
 
+          {/* Small dots for Emergency Contacts (Green) - only show if notification sent */}
+          {settings?.notifyEmergencyContact && contactDots.map((dot) => (
+            <div
+              key={dot.id}
+              className="absolute animate-bounce-in"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: `translate(calc(-50% + ${dot.x}px), calc(-50% + ${dot.y}px))`,
+                animationDelay: `${dot.delay}s`,
+              }}
+            >
+              <div className="relative group cursor-pointer">
+                {/* Pulsing outer ring */}
+                <div className="absolute inset-0 w-4 h-4 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                {/* Solid dot */}
+                <div className="relative w-4 h-4 bg-gradient-to-br from-green-400 to-green-500 rounded-full border-2 border-white shadow-lg">
+                  <div className="absolute inset-0.5 bg-white/30 rounded-full"></div>
+                </div>
+                {/* Tooltip */}
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg">
+                    {dot.name}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Small dots for Nearby Users (Orange) - only show if notify nearby is on */}
+          {settings?.notifyNearby && nearbyDots.map((dot) => (
+            <div
+              key={dot.id}
+              className="absolute animate-bounce-in"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: `translate(calc(-50% + ${dot.x}px), calc(-50% + ${dot.y}px))`,
+                animationDelay: `${dot.delay}s`,
+              }}
+            >
+              <div className="relative group cursor-pointer">
+                {/* Pulsing outer ring */}
+                <div className="absolute inset-0 w-4 h-4 bg-orange-400 rounded-full animate-ping opacity-75"></div>
+                {/* Solid dot */}
+                <div className="relative w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full border-2 border-white shadow-lg">
+                  <div className="absolute inset-0.5 bg-white/30 rounded-full"></div>
+                </div>
+                {/* Tooltip */}
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg">
+                    Nearby User
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
           {/* SOS Button in center */}
           <div className="relative flex items-center justify-center">
             {/* Outer glow ring - centered */}
@@ -318,10 +420,28 @@ function EmergencyAlert() {
           </div>
         </div>
 
+        {/* Legend */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-4 mb-6">
+          <div className="flex items-center justify-around text-xs">
+            {settings?.notifyEmergencyContact && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gradient-to-br from-green-400 to-green-500 rounded-full border border-white shadow"></div>
+                <span className="text-gray-700 font-medium">Emergency Contacts ({contactDots.length})</span>
+              </div>
+            )}
+            {settings?.notifyNearby && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full border border-white shadow"></div>
+                <span className="text-gray-700 font-medium">Nearby Users ({nearbyDots.length})</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Cancel Button */}
         <button
           onClick={handleCancelClick}
-          className="w-full bg-gradient-to-r from-red-400 to-rose-400 text-white font-bold py-4 rounded-2xl hover:from-red-500 hover:to-rose-500 active:scale-[0.98] transition-all shadow-lg shadow-red-200/50 mt-8"
+          className="w-full bg-gradient-to-r from-red-400 to-rose-400 text-white font-bold py-4 rounded-2xl hover:from-red-500 hover:to-rose-500 active:scale-[0.98] transition-all shadow-lg shadow-red-200/50"
         >
           CANCEL
         </button>
